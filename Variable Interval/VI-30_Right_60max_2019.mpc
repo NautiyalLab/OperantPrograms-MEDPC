@@ -1,0 +1,329 @@
+\                        C O M M E N T S
+\
+\ Right Lever V-30 w/ 60 Trials 
+\
+\
+\
+\
+
+\only save W, P variable to data file*******
+DISKFORMAT = 13.1
+DISKVARS = W    \"DISKVARS" only prints selected variables to datafile
+
+                  \  Inputs ****************************
+^headIN = 3       \  IR head entry detector
+^LLever2 = 1       \  left lever press
+^RLever2 = 2       \  right lever press
+
+
+                  \  Outputs ****************************
+^leftlever = 1
+^rightlever = 2
+^dipper = 3        \ On Liquid Dipper
+^house = 7         \houselight
+
+    \CONSTANTS***********************
+^DipDuration = 5    \dipper up duration (sec)
+
+
+
+\  VARIABLES USED IN THIS PROGRAM
+\   a
+\   b
+\   c = master timer (in seconds, with 1/10s resolution)
+\   d = poking
+\   e = "set e = " lever fi duration, 1sec = 100
+\   f =
+\   g = random lever to be used (On"g")
+\   h = list of levers to be drawn from
+\   i = list array of ITI durations
+\   j = total number of trials (peak and fi)
+\   k = within trial/iti counter
+\   l
+\   m = end session variable, intially set to 1, 2 = stopabortflush
+\   n = left lever responses
+\   o = right lever responses
+\   p = trial time counter
+\   q
+\   r = right lever record
+\   s = left lever record
+\   t = master timer
+\   u = poking
+\   v
+\  (w) = time and event code for matlab
+\   x = ITI dur, selected from list i
+\   y
+\   z (reserved)
+
+
+\  \  SHOW POSITIONS
+\  1 =
+\  2 = Left Lever Responses
+\  3 = trial counter
+\  4 = Session Time (minutes)
+\  5 = head entries
+\  6 = Dips
+
+\======================================================
+\ MATLAB standardized codes
+\ *** = used in this program
+
+^Feed1 = 0021
+^Feed2 = 0022
+^Feed3 = 0023
+^Feed4 = 0024
+^DipOn = 0025   \***
+^DipOff = 0026   \***
+^LLeverOn = 0027 \***
+^RLeverOn= 0028  \***
+^LLeverOff = 0029 \***
+^RLeverOff = 0030 \***
+^LightOff1 = 0031
+^LightOff2 = 0032
+^LightOff3 = 0033
+^LightOff4 = 0034
+^LightOn1 = 0041
+^LightOn2 = 0042
+^LightOn3 = 0043
+^LightOn4 = 0044
+^ToneOff1 = 0051
+^ToneOff2 = 0052
+^ToneOff3 = 0053
+^ToneOff4 = 0054
+^ToneOn1 = 0061
+^ToneOn2 = 0062
+^ToneOn3 = 0063
+^ToneOn4 = 0064
+^WNoiseOff1 = 0071
+^WNoiseOff2 = 0072
+^WNoiseOff3 = 0073
+^WNoiseOff4 = 0074
+^WNoiseOn1 = 0081
+^WNoiseOn2 = 0082
+^WNoiseOn3 = 0083
+^WNoiseOn4 = 0084
+
+^StartTrial = 0111
+^EndTrial = 0112
+^StartSession = 0113  \***
+^EndSession = 0114   \***
+^HouseLightOff = 0115
+^HouseLightOn = 0116
+^OnFan = 0117\***
+^OffFan = 0118\***
+^StartIti = 0121
+^EndIti = 0122
+^LightOffStan = 0201
+^LightOnStan = 0202
+^LightOffComp = 0203
+^LightOnComp = 0204
+^LightOffCtrl = 0205
+^LightOnCtrl = 0206
+^FeedStan = 0207
+^FeedComp = 0208
+^StartStanFlash = 0209
+^StopStanFlash = 0211
+^StartCompFlash = 0212
+^StopCompFlash = 0213
+^STNonGapNonProbe = 0214
+^STNonGapProbe = 0215
+^STGapNonProbe = 0216
+^STGapProbe = 0217
+
+^ProbeTrial = 0221
+^AutoTrial = 0222
+
+^PokeOff1 = 1001
+^PokeOff2 = 1002
+^PokeOff3 = 1003
+^PokeOff4 = 1004
+^PokeOn1 = 1011
+^PokeOn2 = 1012
+^PokeOn3 = 1013
+^PokeOn4 = 1014
+^LLeverPress = 1015
+^RLeverPress = 1016
+^PokeOffStan = 1301
+^PokeOnStan = 1302
+^PokeOffComp = 1303
+^PokeOnComp = 1304
+^PokeOffCtrl = 1305
+^PokeOnCtrl = 1306
+
+^FeederLightOn = 0101  \***
+^FeederLightOff = 0102  \***
+
+\================================================================
+
+
+\Dimensionalize Event and Time code array
+dim w=10000
+
+
+\VI duration list (in hundredths of seconds)
+list i = 610,825,961,1135,1217,1383,1503,1662,2022,2152,2471,2826,2017,3152,3212,3281,3727,4049,4173,4319,4570,4801,5077,5254,5418,6022
+
+
+\===============================
+\   Z-PULSES USED IN THIS PROGRAM
+\ z1 = dipper up (initiate timer D)
+\ z2 = reset dipper timer
+\ z3 = limit left lever #
+\ z4 = limit right lever #
+\ z5 = lever press
+\ z8/9/10 = head poking
+\===============================
+
+
+s.s.1,  \MATLAB TIMER "T"
+
+s1,
+        0": SET p = -1; set m = 1--->s2
+
+s2,
+        .02": SET T = T + 100000 --->sx \Keeps time in 50th of a second
+
+
+
+
+S.S.2,    \INITIALIZE
+
+s1,
+
+           #start: ON^house; add p; set w(p)= ^HouseLightOn + T--->s2
+
+s2,
+
+         .01":if v = 60 [@end, @goon]
+
+                  @end:--->s3
+                  @goon:--->s2
+
+
+s3,
+        5.01": OFF^house;add p; set w(p) = ^HouseLightOff + T;
+            add p; set w(p)= ^EndSession + T;
+            add p; set w(p)=-987.987;--->stopabortflush
+
+
+
+s.s.3,  \TRIAL AND ITI GENERATOR
+
+s1,
+        #start:add p; set w(p)= ^StartSession + T;
+                ON^rightlever;
+                add p; set w(p) = ^RLeverOn + T;--->s2
+
+s2,
+        #R^RLever2: if f>y [@dipper, @nodip]
+		@dipper: --->s3
+		@nodip: --->s2
+
+			
+
+s3, 
+	0.1": ON^dipper; add v;
+       add p; set w(p) = ^DipOn + T--->s4
+
+
+s4,
+
+        5":OFF^dipper; add p; set w(p) = ^DipOff + T; randd y=i;z5;
+     add u;SHOW 3, Dipper# ,v; --->s2
+
+
+
+      
+
+
+s.s.4,   \VI timer
+s1,  
+	
+	#start: SET f=0; --->s2
+
+s2, 
+	0.1": SET f=f+10;  ---> s3
+
+s3, 	
+	0.1": if f>y [@rew, @more]
+		@rew: ---> s4
+		@more: 	SET f=f+10 ---> s2
+
+s4, 
+	#z5: SET f=0; --->s2 
+
+
+
+
+S.S.5,  \Head Entry (Input 3) COUNTER
+S1,
+    #START:SHOW 5,HeadIn,0; set u=0; --->S2
+S2,
+    #R^headIN:  add p; set w(p)=^PokeOn1+T;add u; SHOW 5,HeadIn,u; z10 ---> s3
+
+s3,
+    #z8 ---> s2
+
+
+s.s.6,  \Head still in checker part 1
+s1,
+    #z10 --->s2   \Z10 gets called when head first enters
+
+s2,
+    0": z9 ---> s3
+
+s3,
+    0.05": if d>0 [@headSTILLin, @headExit]
+        @headSTILLin: set d=0; ---> s2
+        @headEXIT: z8; add p; set w(p)=^PokeOff1+T;---> s1
+
+
+
+s.s.7, \Head still in checker part 2
+s1,
+    #z9: --->s2
+
+s2,
+    #R^headIN: set d=1; --->s3
+s3, 
+   0": --->s1
+
+
+
+S.S.8, \Lever Press Record
+
+s1,
+      #start--->s2
+
+s2,
+
+      #R^RLever2:add s;show 2, RLever, s;
+                       add p; set w(p) = ^RLeverPress + T--->sx
+
+
+
+
+
+s.s.9,  \MASTER TIMER
+
+s1,
+        #start:--->s2
+
+s2,
+        1': set c = c + 1; show 4, SessTime, c; add j--->sx
+
+s.s.10,   \Session Length Limit
+
+s1,
+
+       #start:--->s2
+
+s2,
+
+       60': OFF^house;add p; set w(p) = ^HouseLightOff + T;
+            add p; set w(p)= ^EndSession + T;
+            add p; set w(p)=-987.987;--->stopabortflush
+
+
+
+

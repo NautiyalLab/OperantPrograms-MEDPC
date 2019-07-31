@@ -1,0 +1,81 @@
+                \  Inputs ****************************
+^headIN = 4       \  IR head entry detector
+^LLever2 = 2       \  left lever press
+^RLever2 = 1       \  right lever press
+ 
+
+                  \  Outputs ****************************
+^leftlever = 8
+^rightlever = 7
+^dipper = 6        \ On Liquid Dipper
+
+^house = 1         \houselight
+
+^LightLeft = 3      \stimulus lights above Left Lever
+
+
+^LightRight = 4     \stimulus lights abouve Right Lever
+
+
+            \CONSTANTS***********************
+^DipDuration = 5    \dipper up duration (sec)
+
+	
+S.S.2,	\INITIALIZE 
+      
+s1,
+  
+           #start:~initANL926;~;~SetRack (MG, 2);~;
+         ~SetAmp (MG,BOX, 90);~;
+         ~SetRF (MG,BOX, 10);~;~SetFreq (MG,BOX, 2500);~;
+         ON^House; --->s3
+
+         
+s3,     
+         1":ON^lightLeft; 
+         ON^leftlever;--->s4
+
+s4,
+         #R^LLever2: ON^dipper;~ondur(MG,BOX,200);~;--->s5
+
+s5,
+         2":OFF^dipper;OFF^LightLeft;
+         OFF^leftlever;--->s7
+
+
+s7,
+         #R^headIN:ON^LightRight;
+         ON^rightlever;--->s8
+
+s8,
+         #R^RLever2: ON^dipper;--->s9
+
+s9,
+         2":OFF^dipper; OFF^rightlever; OFF^LightRight;
+          OFF^house;--->s10
+
+s10,
+         2":--->stopkill
+
+         
+
+S.S.3
+s1,
+	#R^LeftLever:	add x; show 2, LeftLev, x --->sx
+	#R^RightLever:  add y; show 3, RightLev, y --->sx
+
+
+
+
+
+
+
+
+
+
+
+
+         
+
+
+

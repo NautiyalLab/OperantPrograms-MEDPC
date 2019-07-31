@@ -1,0 +1,334 @@
+\
+\ ******************************************************************
+\
+\
+\                        C O M M E N T S
+\
+\ Created 10/3/08; modified 2/15/09 to VI; modified for mouse boxes 10/26/09   
+\ 2 reinforcers are delivered on an VI-60 schedule.
+\ This training program lasts for 30 reinforcers.
+\ VI durations are an exponential distribution with a mean of 60s
+
+
+\  CONSTANTS USED IN THIS PROGRAM
+
+
+                  \  Inputs ****************************
+                                 
+^HeadEntry = 4
+^RightPress = 1
+^LeftPress = 2
+                          
+
+
+                  \  Outputs ****************************
+                     
+                        
+^Dipper = 6
+^House = 1
+^RightLever = 7
+^LeftLever = 8
+^Fan = 12       
+
+                  
+                                                               
+
+\  VARIABLES USED IN THIS PROGRAM
+\  (a) = head entry a(1) and bar press a(0) counter
+\  (b) = head entry b(1) and bar press b(0)holder
+\   c =  selection holder for variable interval duration
+\   d =  event counter (used with w array)
+\  (e) = exponential distribution of VI durations
+\  (f) = exponential distribution of VI durations
+\  (g) = exponential distribution of VI durations
+\   h =  lever active/not active 
+\   i =  lever press counter
+\   j =  counterbalancing for stimulus in S=
+\   k =  array for show timer
+\   l =  reinforcer counter
+\   m =  holder for exp dist array selection
+\   n =  list for session selection of exp. distributions
+\   o = 
+\  (p) = dipper retreival array.  p(0) = total retrieved
+\   q = 
+\   r =  
+\   s =  
+\   t =  master timer (in seconds, with 1/10s resolution)
+\   u =  
+\   v = 
+\   w =  array for data holding (Matlab codes and time stamp)
+\   x =  retreived reinforcer indicator
+\   y =  
+\   z =  
+
+\  SHOW POSITIONS
+\  1 = Session Timer
+\  2 = Lever Active?
+\  3 = Pellets delivered
+\  4 = # Reinforcers
+\  5 = Total Presses
+
+\   Z-PULSES USED IN THIS PROGRAM
+
+\   z1 = 
+\   z2 = end session, save data
+\   z3 = restart interval determination
+\   z4 = 
+\   z5 = 
+\   z6 = drop pellet
+\   z7 = 
+\   z8 = 
+\   z9 = 
+
+
+
+\======================================================
+\ MATLAB standardized codes
+
+
+^PelletDrop = 0021
+^DipOn = 0025   
+^DipOff = 0026   
+
+^LLeverOn = 0027 
+^RLeverOn= 0028  
+^LLeverOff = 0029 
+^RLeverOff = 0030 
+
+^LightOffRed = 0031 
+^LightOffWhite = 0032 
+^LightOffGreen = 0033  
+^LightOffHouse = 0034  
+^LightOnRed = 0041 
+^LightOnGreen = 0042 
+^LightOnWhite = 0043 
+^LightOnHouse = 0044
+
+
+^StartSession = 0113  
+^EndSession = 0114   
+
+^HouseLightOff = 0115
+^HouseLightOn = 0116          
+
+^OnFan = 0117
+^OffFan = 0118
+                          
+^VIStart = 0119
+^VIOver = 0120       
+
+^HeadExit = 1001 
+^HeadEntry = 1011 
+
+^LLeverPressOn = 1015
+^RLeverPressOn = 1016
+^LLeverPressOff = 1017
+^RLeverPressOff = 1018                         
+
+
+\================================================================
+
+DISKFORMAT = 13
+DISKCOLUMNS = 1
+DISKVARS= L,D,W,I,P,M
+
+
+
+\ w array is time stamp plus event code (as listed above)
+
+dim w=100000
+dim k=3
+dim a=2
+dim b=2
+dim p = 30
+
+\Durations for VI-60
+\list e =  1309,1559,1596,1781,2509,2519,2839,3394,3593,3598,
+\      3716,3732,4243,4366,4394,4408,4721,5407,5507,5824,
+\      6074,6691,7040,7782,8070,11696,12263,15497,16361,17513
+
+\List f =  769,829,1143,1254,1498,1527,1535,2063,2164,2745,
+\      2843,3090,3196,4604,4865,5192,5821,5987,6939,7402,
+\      7723,8046,8131,8808,10972,11414,11478,12229,16534,19200
+
+\List g =  774,995,1356,1765,1877,2285,2311,2355,2622,2776,
+\      2922,3293,3388,3412,3515,4174,4500,5214,5376,6360,
+\      7324,7928,8200,9001,9487,9688,14940,16486,17063,18608
+
+           
+\Durations for VI-15
+\list e =  157,167,190,238,240,251,382,446,458,553,
+\      575,611,686,773,833,922,1007,1029,1304,1388,
+\      1474,1649,1698,2064,2833,3131,3722,4348,5657,6202
+                                                                              
+\List f =  103,143,202,264,292,314,318,428,538,556,
+\      622,642,659,746,924,934,1120,1377,1557,1823,
+\      1832,1940,2135,2520,2601,2785,3713,4002,4675,5218
+
+\List g =  107,257,262,466,477,507,524,678,737,750,
+\      789,813,845,918,982,1029,1084,1207,1273,1275,
+\      1282,1571,1777,2117,2181,2765,2920,3381,5911,6099
+
+\Durations for VI-10
+\List e =      100,100,100,100,200,200,200,200,300,300,
+\    400,400,500,500,500,700,700,700,900,1100,
+\    1200,1400,1500,1500,1500,1800,2100,2400,4100,4300
+
+\List f =      100,100,100,200,200,200,300,400,400,400,500,
+\    500,600,600,800,800,800,900,1000,1100,1200,1300,
+\    1400,1400,1600,1700,1900,1900,2700,4900
+
+\List g =      100,100,100,100,200,300,400,400,400,400,500,
+\   600,600,600,700,800,900,1200,1300,1300,1300,
+\    1400,1400,1700,1900,1900,1900,2000,2400,3100
+
+
+\Durations for VI-2
+List e =  102,106,116,123,124,125,128,130,143,145,
+      147,155,158,160,161,187,189,190,190,197,
+      205,243,243,260,264,266,273,303,322,630
+
+List f =  103,105,106,109,121,124,136,142,149,149,
+      157,165,169,170,173,185,186,191,191,206,
+      210,211,213,222,293,302,325,357,383,433
+
+List g =  98,101,103,103,103,104,108,109,109,110,
+      110,118,121,147,155,177,191,194,207,215,                                                                      
+      216,217,218,263,302,341,362,430,432,519
+
+
+List n =  1, 2, 3
+
+
+
+S.S.1,  \lowers dipper and selects the VI duration list prior to program start
+s1,
+    0":    randd m=n --->s2
+s2,
+    0":    --->sx
+
+s.s.2,  \MATLAB TIMER "T"
+s1,     
+            #start: --->s2
+s2,    
+            .01": SET T = T + 100000--->sx
+
+
+S.S.3, \ session controller             
+s1,
+       #start: ~initANL926;~;~SetRack (MG, 2);~;
+        ~SetAmp (MG,BOX, 90);~;
+        ~SetRF (MG,BOX, 10);~;~SetFreq (MG,BOX, 2500);~;--->s2
+s2,
+    .02":    set w(d)=^StartSession+T; add d;
+        ON^fan; set w(d)=^OnFan+T; add d;
+        ON^LeftLever; set w(d)=^LLeverOn+T; add d;
+        set w(d)=^VIStart+T; add d; if j=1 [@flashing, @steady]
+                 @flashing: z9 ---> s3
+                 @steady: on ^house --->s3
+s3,                                                
+       #z2:    --->s4
+s4,
+    10":    Off^house; set w(d)=^HouseLightOff+T; add d;
+        Off^fan; set w(d)=^OffFan+T; add d;
+        set w(d)=^EndSession+T; add d;                                   
+        set w(d)=-987.987 --->stopabortflush                                  
+
+                                                                                  
+s.s.4, \Variable Interval controller
+s1,
+    #start: z4 --->s2
+s2,
+    c#T:     set w(d)=^VIOver+T; add d; 
+        set h=1; show 2, LeverActive, h --->s3   
+s3,
+    #z3:    z4; set w(d)=^VIStart+T; add d;   --->s2
+
+
+S.S.5  \Bar Press detector
+s1,
+    #start: --->s2
+s2,
+       .1":     if a(0) > 0 [@press, @nopress]
+            @press: if b(0) = 0 [@leveron, @noleveron]
+                    @leveron: set b(0) = 1; set a(0) = 0; 
+                          set w(d)=^LLeverPressOn+T; add d;
+                          set i = i+1; show 5, TotPresses, i;
+                          if h=1 [@dipper, @nodipper]
+                            @dipper: z6; set h=0;
+                                show 2,LeverOFF,h; --->s2
+                            @nodipper: --->s2
+                    @noleveron: set b(0) = 1; set a(0) = 0--->s2
+            @nopress: if b(0) = 1 [@stop, @nostop]
+                    @stop:    set b(0) = a(0); set a(0) = 0;  
+                        set w(d)=^LLeverPressOff+T; add d;--->s2
+                    @nostop:set b(0) = a(0); set a(0) = 0--->s2 
+        #R^LeftPress: set a(0) = a(0) + 1--->sx 
+
+S.S.6  \HeadEntry detector  
+s1,
+    #start: --->s2
+s2,
+       .1":     if a(1) > 0 [@HE, @noHE]
+                @HE: if b(1) = 0 [@HeadIn, @noHeadIn]
+                        @HeadIn: set b(1) = 1; set a(1) = 0; set x=1;
+                              set w(d)=^HeadEntry+T; add d; --->s2
+                        @noHeadIn: set b(1) = 1; set a(1) = 0--->s2
+                @noHE: if b(1) = 1 [@Exit, @noExit]
+                        @Exit:    set b(1) = a(1); set a(1) = 0;  
+                            set w(d)=^HeadExit+T; add d;--->s2
+                        @noExit:set b(1) = a(1); set a(1) = 0--->s2 
+        #R^HeadEntry: set a(1) = a(1) + 1--->sx 
+
+
+\Check this section against working mousebox programs
+
+S.S.7, \delivers dipper 
+s1,
+       #z6:    if l=0 [@First, @NotFirst]
+                    @first: on^dipper; set w(d)=^DipOn+T; add d--->s2
+                    @NotFirst: on^dipper; set w(d)=^DipOn+T; add d --->s2
+s2,
+        .5":~ondur(MG,BOX,200);~;--->s3
+   
+s3,                                
+    4.5":    Off^Dipper; z3;                                             
+            set w(d)=^DipOff+T; add d;
+            add l; show 3, Dippers,l;
+            if l=30 [@endnow, @noend]                     
+                       @endnow:z2 --->s4                                  
+                       @noend: --->s1
+s4,
+    1":    Off^LeftLever; set w(d)=^LLeverOff+T; add d; off ^house; z10 --->s1
+                                                     
+                                                                              
+
+S.S.8, \Session Duration Clock
+s1,
+    #start:--->s2
+s2,
+    1":    set k(0)=k(0)+.01; if k(0)>.59 [@AddMin, @NoAdd]
+            @AddMin: add k(1); set k(0)=0; set k(2)=k(0)+k(1); show 1, Session, k(2) --->s2
+            @NoAdd: set k(2)=k(0)+k(1); show 1, Session, k(2)--->s2
+
+S.S.9  \selects VI duration from list chosen ramdomly for this session
+s1,
+    #z4: if m=1 [@List1, @other]
+        @list1: randd c=e --->s1
+        @other: if m=2 [@List2, @List3]
+            @List2: randd c=f --->s1
+            @List3: randd c=g --->s1
+
+s.s.10, \\\flashing HL control for component stimulus
+s1,
+#z9: on ^house ---> s2
+
+s2,
+.5": off ^house ---> s3
+#z10: off ^house ---> s1
+
+s3,
+.5": on ^house ---> s2
+#z10: off ^house ---> s1
+
+

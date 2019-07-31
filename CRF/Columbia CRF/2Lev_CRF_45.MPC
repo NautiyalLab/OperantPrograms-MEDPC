@@ -1,0 +1,251 @@
+\                        C O M M E N T S
+\
+\ Both Lever CRF w/ 60 Trials or 45 min and a ~mean 40 sec. ITI
+\ Two reinforced presses before ITI
+\
+\ Gray Herzberg 7/25/05
+\ Modified 10/3/12 by KTaylor
+\ Modified 07/10/14 by MBailey and SCanetta
+\ Modified 7/11/14 by KTaylor for toggle lever inputs
+\ Levers retract after 2 presses. To change, change the value of n in S.S.3/S4
+\ Inputs and outputs set for RNAC boxes
+
+\only save W variable to data file*******
+DISKFORMAT = 13
+DISKVARS = W    \"DISKVARS" only prints selected variables to datafile
+DISKCOLUMNS = 1
+
+                   \  Inputs ****************************
+^headIN = 4        \  IR head entry detector
+
+^LLever2 = 2       \  left lever press
+^RLever2 = 1       \  right lever press
+
+
+                   \  Outputs ****************************
+^leftlever = 8
+^rightlever = 7
+^leftlight=3
+^rightlight=4
+
+^dipper = 6       \ On Liquid Dipper
+^house = 1         \houselight
+
+
+
+\  VARIABLES USED IN THIS PROGRAM
+\   a = holder for lever press start
+\   b = holder for lever press end
+\   c = master timer (in seconds, with 1/10s resolution)
+\   d = ITI dur, selected from list i
+\   e =
+\   f =
+\   g =
+\   h =
+\   i = list array of ITI durations
+\   j =
+\   k = session clock
+\   l =
+\   m =
+\   n =
+\   o =
+\   p =
+\   q
+\   r = lever press record
+\   s =
+\   t = master timer
+\   u
+\   v
+\  (w) = time and event code for matlab
+\   x =
+\   y =
+\   z =
+
+
+\  \  SHOW POSITIONS
+\  1 =
+\  2 = Left Lever Responses
+\  3 = trial counter
+\  4 = Session Time (minutes)
+\  5 = head entries
+\  6 =
+
+\======================================================
+\ MATLAB standardized codes
+\ *** = used in this program
+
+^Feed1 = 0021
+^Feed2 = 0022
+^Feed3 = 0023
+^Feed4 = 0024
+^DipOn = 0025   \***
+^DipOff = 0026   \***
+^LLeverOn = 0027 \***
+^RLeverOn= 0028  \***
+^LLeverOff = 0029 \***
+^RLeverOff = 0030 \***
+^LightOff1 = 0031
+^LightOff2 = 0032
+^LightOff3 = 0033
+^LightOff4 = 0034
+^LightOn1 = 0041
+^LightOn2 = 0042
+^LightOn3 = 0043
+^LightOn4 = 0044
+^ToneOff1 = 0051
+^ToneOff2 = 0052
+^ToneOff3 = 0053
+^ToneOff4 = 0054
+^ToneOn1 = 0061
+^ToneOn2 = 0062
+^ToneOn3 = 0063
+^ToneOn4 = 0064
+^WNoiseOff1 = 0071
+^WNoiseOff2 = 0072
+^WNoiseOff3 = 0073
+^WNoiseOff4 = 0074
+^WNoiseOn1 = 0081
+^WNoiseOn2 = 0082
+^WNoiseOn3 = 0083
+^WNoiseOn4 = 0084
+
+^StartTrial = 0111
+^EndTrial = 0112
+^StartSession = 0113  \***
+^EndSession = 0114   \***
+^HouseLightOff = 0115
+^HouseLightOn = 0116
+
+^StartIti = 0121
+^EndIti = 0122
+^LightOffStan = 0201
+^LightOnStan = 0202
+^LightOffComp = 0203
+^LightOnComp = 0204
+^LightOffCtrl = 0205
+^LightOnCtrl = 0206
+^FeedStan = 0207
+^FeedComp = 0208
+^StartStanFlash = 0209
+^StopStanFlash = 0211
+^StartCompFlash = 0212
+^StopCompFlash = 0213
+^STNonGapNonProbe = 0214
+^STNonGapProbe = 0215
+^STGapNonProbe = 0216
+^STGapProbe = 0217
+
+^ProbeTrial = 0221
+^AutoTrial = 0222
+
+^PokeOff1 = 1001
+^PokeOff2 = 1002
+^PokeOff3 = 1003
+^PokeOff4 = 1004
+^PokeOn1 = 1011
+^PokeOn2 = 1012
+^PokeOn3 = 1013
+^PokeOn4 = 1014
+^LPressOn = 1015
+^RPressOn = 1016
+^LPressOff = 1017
+^RPressOff = 1018
+^PokeOffStan = 1301
+^PokeOnStan = 1302
+^PokeOffComp = 1303
+^PokeOnComp = 1304
+^PokeOffCtrl = 1305
+^PokeOnCtrl = 1306
+
+
+\================================================================
+
+
+\Dimensionalize Event and Time code array
+dim w=10000
+dim a=2
+dim b=2
+dim k=4
+dim r=2
+
+\ITI duration list (in hundredths of seconds)
+list i = 110, 126, 151, 226, 282, 463, 494, 610, 646, 763, 825, 961, 1096, 1135, 1152, 1217, 1238, 1248, 1364, 1383, 1503, 1530, 1581, 1662, 1955, 2022, 2152, 2340, 2471, 2555, 2826, 2851, 3017, 3152, 3212, 3381, 3727, 4049, 4094, 4173, 4319, 4370, 4501, 4577, 5054, 5118, 6022, 6545, 6696, 6836, 7062, 7373, 7882, 11753, 12549, 12815
+
+
+\===============================
+\   Z-PULSES USED IN THIS PROGRAM
+\ z1 = left lever press indicator
+\ z2 = right lever press indicator
+\ z3 = end session
+\ z4 =
+\===============================
+
+\===============================
+\  Show Positions
+\ 1 = Session Timer
+\ 2 = Left Presses
+\ 3 = Right Presses
+\ 4 = Reinforcers
+\ 5 = HE indicator
+\===============================
+
+
+s.s.1,  \MATLAB TIMER "T"
+s1,
+        0": SET p = -1; set m = 1--->s2
+s2,
+        .01": SET T = T + 100000 --->sx \Keeps time in 100th of a second
+
+S.S.2,    \INITIALIZE
+s1,
+	#start:	~initANL926;~;~SetRack (MG, 2);~;
+		~SetAmp (MG,BOX, 90);~;
+        	~SetRF (MG,BOX, 10);~;~SetFreq (MG,BOX, 2500);~;
+         	ON^house; add p; set w(p)= ^HouseLightOn + T--->s2
+
+s2,  \end after 60 reinforcers or 60 minutes
+	#z3:	Off^rightlever; add p; set w(p)=^RLeverOff+T;
+ 	   	Off^leftlever; add p; set w(p)=^LLeverOff+T;--->s3
+	45': 	Off^rightlever; add p; set w(p)=^RLeverOff+T;
+	 	Off^leftlever; add p; set w(p)=^LLeverOff+T;--->s3
+s3,
+        10": 	OFF^house;add p; set w(p) = ^HouseLightOff + T;
+            	add p; set w(p)= ^EndSession + T;
+            	add p; set w(p)=-987.987;--->stopabortflush
+
+s.s.3,  \TRIAL AND ITI GENERATOR
+s1,
+        #start:	add p; set w(p)= ^StartSession + T;
+                ON^Rightlever; add p; set w(p)=^RLeverOn+T;
+		ON^leftlever; add p; set w(p)=^LLeverOn+T;--->s2
+s2,
+        #R^LLever2: ON^dipper; add p; set w(p)=^DipOn+T--->s3
+        #R^RLever2: ON^dipper; add p; set w(p)=^DipOn+T--->s3
+s3,
+        .5":	add j;show 4,Dips,j;add n; ~ondur(MG,BOX,200);~;--->s4
+s4,
+         4.5":	OFF^dipper;add p;set w(p)=^DipOff+T;
+        	if j>59 [@end, @more]
+            		@end: z3 --->s1
+            		@more: if n=2 [@timeout, @more]
+                		@timeout: randd d=i; Off^Rightlever; add p; set w(p)=^RLeverOff+T;
+            				  Off^leftlever; add p; set w(p)=^LLeverOff+T;--->s5
+                		@more: --->s2
+s5,
+        d#t: 	ON^rightlever; add p;set w(p)=^RLeverOn+T; 
+		ON^leftlever; add p; set w(p)=^LLeverOn+T;set n=0--->s2
+
+S.S.4,  \Head Entry (Input 3) COUNTER
+s1,
+	#START:SHOW 5,HeadIn,0--->S2
+s2,
+	#R^headIN: SHOW 5,HeadIn,1; add p; set w(p) = ^PokeOn1 + T---> sx
+
+S.S.7, \Session Duration Clock
+s1,
+    #start:--->s2
+s2,
+    1":    set k(0)=k(0)+.01; if k(0)>.59 [@AddMin, @NoAdd]
+            @AddMin: add k(1); set k(0)=0; set k(2)=k(0)+k(1);
+                 show 1, Session, k(2)--->s2
+            @NoAdd: set k(2)=k(0)+k(1); show 1, Session, k(2)--->s2

@@ -1,0 +1,462 @@
+\                        C O M M E N T S
+\
+\ ALL WRONG - REWRITE
+\ The M array records the break point (the FR value that was not completed) for each lever: 
+\ M(1) = left lever break point
+\ M(2) = right lever break point
+\ the FR value is stored in the "L" variable, which is incremented after each dipper in state 8 of s.s.3.  So, to change 
+\ the increment size, go to that state and change the following statement "set l = l + 2".
+\  
+
+
+\only save W, P variable to data file*******
+DISKFORMAT = 13
+DISKVARS = W    \"DISKVARS" only prints selected variables to datafile
+DISKCOLUMNS = 1
+
+                  \  Inputs ****************************
+^headIN = 3       \  IR head entry detector
+^headOUT = 4      \ IR head exit detector
+^LLever2 = 1       \  left lever press
+^RLever2 = 2       \  right lever press
+ 
+
+                  \  Outputs ****************************
+^leftlever = 1
+^rightlever = 2
+^fan = 12         \ Fans for Box ventilation  
+^dipper = 3        \ On Liquid Dipper
+^feederlight = 8   \ Light in the Head Entry Hole; Signal being used in this exp.
+^house = 7         \houselight
+
+    \CONSTANTS***********************
+^DipDuration = 5    \dipper up duration (sec)
+
+
+
+\  VARIABLES USED IN THIS PROGRAM
+\   *(a) = head poke latency array; records latency to first headpoke after dipper up (?????? Not sure this is right).......Bar Press Detector???
+\   *b = counter for a  (??????Not sure if this is right?????).....Old press or new press detector???
+\   c
+\   d
+\   e
+\   *f = time elapsed in the ITI
+\   *g = random lever to be used (On"g")
+\   *h = list of levers to be drawn from
+\   *i = time lever is held down in a trial
+\   *j = total number of trials
+\   k
+\   l
+\   m
+\   n
+\   o
+\   *p = trial time counter
+\   q
+\   *r = Display timer
+\   *(s) = lever record
+\   *t = Master Matlab timer
+\   *(u) = ITI duration list
+\   *(v) = LeverDown duration list 
+\   *(w) = time and event code for matlab
+\   *x = ITI dur, selected from list u
+\   *y = LeverDown dur, selected from list v
+\   z (reserved)
+
+
+\  \  SHOW POSITIONS
+\  1 = Session Time
+\  2 = Reins Obtained
+\  3 = Resps Emitted
+\  4 = Holddown Target
+\  4 = ITI Target
+\  7 = Left Lever Count
+\  8 = Right Lever Count
+\  9 = Time Held
+\  10= Time Elapsed in ITI
+
+\======================================================
+\ MATLAB standardized codes
+\ *** = used in this program
+
+^Feed1 = 0021
+^Feed2 = 0022
+^Feed3 = 0023
+^Feed4 = 0024
+^DipOn = 0025   \***
+^DipOff = 0026   \***
+^LLeverOn = 0027 \***
+^RLeverOn= 0028  \***
+^LLeverOff = 0029 \***
+^RLeverOff = 0030 \***
+^LightOff1 = 0031
+^LightOff2 = 0032
+^LightOff3 = 0033
+^LightOff4 = 0034
+^LightOn1 = 0041   
+^LightOn2 = 0042
+^LightOn3 = 0043
+^LightOn4 = 0044
+^ToneOff1 = 0051\***
+^ToneOff2 = 0052
+^ToneOff3 = 0053
+^ToneOff4 = 0054
+^ToneOn1 = 0061\***
+^ToneOn2 = 0062
+^ToneOn3 = 0063
+^ToneOn4 = 0064
+^WNoiseOff1 = 0071
+^WNoiseOff2 = 0072
+^WNoiseOff3 = 0073
+^WNoiseOff4 = 0074
+^WNoiseOn1 = 0081
+^WNoiseOn2 = 0082
+^WNoiseOn3 = 0083
+^WNoiseOn4 = 0084
+
+^StartTrial = 0111\***
+^EndTrial = 0112\***
+^StartSession = 0113  \***
+^EndSession = 0114   \***
+^HouseLightOff = 0115
+^HouseLightOn = 0116
+^OnFan = 0117\***
+^OffFan = 0118\***
+^StartIti = 0121\***
+^EndIti = 0122\***
+^LightOffStan = 0201
+^LightOnStan = 0202
+^LightOffComp = 0203
+^LightOnComp = 0204
+^LightOffCtrl = 0205
+^LightOnCtrl = 0206
+^FeedStan = 0207
+^FeedComp = 0208
+^StartStanFlash = 0209
+^StopStanFlash = 0211
+^StartCompFlash = 0212
+^StopCompFlash = 0213
+^STNonGapNonProbe = 0214
+^STNonGapProbe = 0215
+^STGapNonProbe = 0216
+^STGapProbe = 0217
+
+^ProbeTrial = 0221
+^AutoTrial = 0222
+
+^PokeOff1 = 1001
+^PokeOff2 = 1002
+^PokeOff3 = 1003
+^PokeOff4 = 1004
+^PokeOn1 = 1011
+^PokeOn2 = 1012
+^PokeOn3 = 1013
+^PokeOn4 = 1014
+^LLeverDown = 1015    \***
+^RLeverDown = 1016    \***
+^LLeverUp = 1017        \***
+^RLeverUp = 1018        \***
+^PokeOffStan = 1301
+^PokeOnStan = 1302
+^PokeOffComp = 1303
+^PokeOnComp = 1304
+^PokeOffCtrl = 1305
+^PokeOnCtrl = 1306   
+                       
+
+^FeederLightOn = 0101  \***
+^FeederLightOff = 0102  \***
+
+\================================================================
+
+
+\Dimensionalize Event and Time code array
+dim w=10000
+dim m = 2  
+               
+list a = 0,0
+list b = 0,0
+list h = 1,2
+list s = 0,0 
+\ITI duration list (in hundredths of a second)
+list u = 21, 61, 103, 146, 189, 234, 279, 326, 373, 422, 472, 523, 576, 630, 685, 743, 801, 862, 924, 989, 1056, 1125, 1196, 1270, 1347, 1427, 1510, 1597, 1688, 1783, 1883, 1989, 2100, 2218, 2343, 2476, 2619, 2773, 2940, 3122, 3322, 3545, 3795, 4082, 4417, 4819, 5325, 6004, 7050, 9822 \20 Seconds
+\LeverDown duration list (in hundredths of a second)
+\list v = 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 15, 16, 17, 19, 20, 22, 23, 25, 27, 28, 30, 32, 34, 36, 38, 40, 42, 45, 47, 50, 52, 55, 58, 62, 65, 69, 73, 78, 83, 88, 94, 102, 110, 120, 132, 149, 175, 244 \0.5 Seconds
+list v = 2, 4, 6, 8, 10, 12, 14, 17, 19, 21, 24, 27, 29, 32, 35, 37, 40, 43, 46, 50, 53, 56, 60, 64, 68, 71, 76, 80, 84, 89, 94, 99, 105, 111, 117, 124, 131, 138, 147, 156, 166, 177, 189, 204, 220, 240, 265, 299, 351, 489 \1 Second
+\list v = 3, 7, 11, 15, 19, 24, 28, 33, 38, 43, 48, 53, 58, 63, 69, 75, 80, 86, 93, 99, 106, 113, 120, 127, 135, 143, 151, 160, 169, 178, 188, 199, 210, 222, 234, 247, 262, 277, 294, 312, 332, 354, 379, 408, 441, 481, 532, 599, 704, 980 \2 Seconds
+\list v = 5, 13, 21, 29, 38, 47, 56, 65, 75, 85, 95, 105, 115, 126, 137, 149, 161, 173, 185, 198, 211, 225, 239, 254, 270, 286, 302, 320, 338, 357, 377, 398, 420, 443, 468, 495, 524, 554, 588, 624, 664, 709, 759, 816, 883, 963, 1064, 1200, 1409, 1963 \4 Seconds
+
+\===============================
+\   Z-PULSES USED IN THIS PROGRAM
+\ z1 = Left Lever Extended
+\ z2 = Right Lever Extended
+\ z3 = Left Lever Retracted (Reinforcement)
+\ z4 = Right Lever Retracted (Reinforcement)
+\ z5 = Shut Down EVERYTHING
+\ z6 = Left Lever Begin Counting Time
+\ z7 = Left Lever Stop Counting Time
+\ z8 = Right Lever Begin Counting Time
+\ z9 = Right Lever Stop Counting Time
+\ z10= Trial Start Contingency Reset
+\ z11= Beep!
+\===============================
+
+S.S.1,    \===MATLAB TIMER "T"===
+s1,     
+    #start: set p = -1;         \Upon getting the start command as an input set p (the trial time counter) = to -1 and go to state 2.
+        --->s2
+
+S2,        \=====update Matlab clock, display====
+    0.01": set T = T + 100000;	\A tenth of a second after it's moved to state two, set T (Master Matlab timer) = T + 100000 (do this for the Randy Code TS)
+	set r = r+0.01;		\Set r (the display timer) = to r + 0.01
+        SHOW 1,SessionTime,r;	\Show 1(session time) call is "session time" which is = to the r variable on the med pc screen
+	SHOW 2,Reins,j;		\Show 2(Reinforcements obtained) call it Reins, which is = j (total number of trials), b/c assumedly they get Rein on each trial
+	SHOW 3,Resp,s(0)+s(1);	\Show 3(Responses emitted), call it Resp, which is equal to s(0) + s(1) the sum of both levers?
+	SHOW 4,Hold Dur,y;	\Show 4(Holddown Target Dur), call it Hold Dur, which is equal to y(lever down duration)
+	SHOW 5,ITI Dur,x;	\Show 5(IIT Duration) call it Dur, which is equal to x (ITI duration)
+	Show 7,LLever,s(0);	\Show 7(Left lever count), call it LLever, which is equal to s(0) (record for LLever presses)
+	Show 8,RLever,s(1);	\Show 8(Right lever count), call it RLever, which is equal to s(1) (record for rlever presses)
+	Show 9,Held Time,i;	\Show 9(Time Held), call it Held Time, which is equal to i(time lever is held down in a trial)
+	Show 10,ITI Time,f;	\Show 10(Time elapsed in ITI), call it ITI Time, which is equal to f(time elaspsed in ITI)
+        --->sx  \Keeps time in 100th of a second
+
+
+S.S.2,    \===INITIALIZE===
+S1,        \=====initialization====
+    #start: ON^fan;		\Upon getting start input, turn the fan on
+        add p; set w(p)= ^OnFan + T;	\also, add p(trial time counter, and set w(p) (a time and event code) equal to fan on plus the time
+        ---> s2			\Move to state set 2
+
+S2,        \=====wait an hour====
+    60': z5;			\Upon entering state set 2, wait one hour and then issue z5 (shut everything down). This simply puts a max of 1 hr on a session
+        --->sx			\If 1 hour has not elapsed remain in sx(a null transition, basically says stay where you are and keep checking input rule)
+
+
+S.S.3,    \===TRIAL AND ITI GENERATOR===
+S1,        \=====initialization====
+    #start:  randd x = u;	\Upon recieving the start command, randomly set x(ITI duration) equal to a number from list u(list of ITI durations)
+        set i = 0;		\ set i(time lever is to be held down) = to 0
+        add p; set w(p)= ^StartSession + T;	\add p(trial time counter), and set w(p) (time and event code) equal to start session plus the time
+        --->s2			\Go to state set 2
+
+S2,        \=====iti====
+    .01": add f;		\after a .01 sec add f(time elapsed in ITI) then perform an if then if not then operation
+        if f >= x [@over, @notover]                \Check if ITI over, or see if enough time has passed to satisfy ITI duration
+            @over: z10;		\If enough time has passed then issue z10(Trial start and contingency reset) or start a new trial and set a lever duration
+		add p; set w(p) = ^EndIti + T;	\also add p(trial time counter, and set w(p)(time and event code for matlab) equal to end ITI and add time
+                --->s3		\go to state set 3
+            @notover: --->sx	\If the time is not long enough for the ITI to be done go to sx(ie, remain in place and keep checking), idea: will eventually satisfy this if keep checking 
+
+S3,        \=====trial start=====
+    0": add p; set w(p) = ^StartTrial + T;	\After 0 seconds in state set 3, add p(trial time counter) and set w(p)(time and event code) equal to start trial plus time
+        ON^house;				\Also, turn the house light on
+        add p; set w(p)= ^HouseLightOn + T;	\also, add p(trial time counter) and set w(p)(time and event code) equal to houselight on plus time
+        randd y = v;				\randomly choosing a number, set y(lever down duration) equal to v(leverdown duration list)....aka, randomly choose a number from list list of #'s in v and set y equal to that
+        set i = 0;				\set i(time lever is held down in a trial) equal to 0
+        randd g = h;				\set g(random lever to be used) equal to h(list of lever to be drawn from) by randomly choosing from h
+        ONg;					\Extend/turn on the lever g(which was just chosen from h), then perform an "if then" "if not then" operation
+        if g = 1 [@leftlever, @rightlever]	\if g(random lever to be used) is equal to 1, then its left lever and if not then its right lever
+            @leftlever: z1;			\If it's left lever issue zpulse z1(left lever extended)
+                add p; set w(p) = ^LLeverOn + T;	\add p(trial time counter) and set w(p) equal to left lever on plus the time
+                --->s4				\go to state set 4
+            @rightlever: z2;				\if it's the right lever, issue zpulse z2(Right lever extended)
+                add p; set w(p) = ^RLeverOn + T;	\add p(trial time counter) and set w(p) (time and event code) equal to right lever on plus the time
+                --->s5				\Go to state set 5
+
+S4,        \=====left lever holding pattern=====
+    #Z3: add p; set w(p) = ^EndTrial + T;	\Wait here until you get z3(left lever retracts), add p(trial time counter), set w(p)(time and event code) equal to end trial plus the time
+        OFF^house;				\Turn the house light off
+        add p; set w(p) = ^HouseLightOff + T;	\Add p(trial time counter) and set w(p)(time and event code) equal to house light off plus the time
+        add j;					\add j(total number of trials)
+        --->s6					\go to state set 6
+
+S5,        \=====right lever holding pattern=====
+    #Z4: add p; set w(p) = ^EndTrial + T;	\Wait here until z4(Right lever retracts), add p(trial time counter), set w(p)(time and event code) equal to end trial plus time
+        OFF^house;				\also, turn the houselight off
+        add p; set w(p) = ^HouseLightOff + T;	\add p(trial time counter) and set w(p)(time and event code) equal to house light off plus time
+        add j;					\also add j(total number of trials)
+        --->s6					\go to state set 6
+
+S6,        \=====rein start=====
+    0": ON^dipper;				\Immediatley after getting here, turn the dipper on
+        add p; set w(p) = ^DipOn + T;		\add p(trial time counter) and set w(p)(time and event code) equal to dipper on plus the time
+	z11;					\Issue zpulse z11(Beep!)
+        --->s7					\Go to state set 7
+
+S7,        \=====rein wait=====
+    4.5": OFF^dipper;				\4.5 seconds after getting here, turn the dipper off (this gives the mouse time to get the milk)
+        add p; set w(p) = ^DipOff + T;		\add p(trial time counter) set w(p)(time and event code) equal to dipper off plus the time
+        OFFg;					\also turn off g(random lever to be used)...because we are going to pick a new one for the next trial
+        add p; set w(p) = ^LLeverOff + T;	\add p(trial time counter) and set w(p)(time and event code) equal to Left lever off plus the time
+        add p; set w(p) = ^StartIti + T;	\add p(trial time counter) and set w(p)(time and event code) equal to start ITI plus time....because we are done with a trial and starting a new ITI
+        --->s8					\Go to state set 8
+
+S8,        \=====check for session end=====
+    0": if j = 40 [@over, @notover]		\Immediatley after getting here, do an if, if not operation for j(total number of trials) if it equals 40
+            @over: z5;				\If j is over 40, then issue a zpulse z5, and go to state sx (remain here)
+                --->sx
+            @notover: set f = 0;		\If not over 40, set f(time elapsed in ITI) equal to 0
+		randd x = u;			\set x(ITI duration) equal to u(list of ITI durations) by randomly choosing a number from the list
+		SHOW 4,ITI,x;			\Show 4(ITI target) call it ITI and set it equal to x(ITI dur)...which we just choose randomly from u(list of ITI durs)
+                --->s2				\Go to state set 2: The ITI decision state to begin the whole process over again
+
+
+S.S.4,    \===LEVER SUMMATION===
+S1,        \=====initialization====
+    #start: --->s2			\After getting the start signal, go to state set 2
+
+S2,        \=====wait for z-pulse====
+    #Z1: set a(0) = 0;			\Wait for zpulse z1(Left lever extended) and set a(0)(head poke latency array) equal to 0
+        --->s3				\.....then Go to state set 3
+    #Z2: set a(1) = 0;			\OR..Wait for zpulse z2(Right lever extended) and set a(1)(head poke latency array) equal to 0
+        --->s4				\....then go to state set 4
+
+S3,        \=====left lever-down processing====
+    #R^LLever2: z6;			\When a response is made on the left lever, issue a zpulse z6(Left lever begin counting time)
+	add a(0);			\add a(0)(head poke latency counter)
+        --->sx 				\Go to state sx(stay in place)
+    .01": if a(0) > 0 [@press, @nopress]	\After a tenth of a second, perform an if/if not operation on a(0) for if its greater than 0
+            @press: if b(0) = 0 [@leveron, @noleveron]	\@Press(a(0) is greater than 0) perform an if/if not operation on b(0) for if its equal to 0
+                @leveron: set b(0) = 1;		\if @leveron(if b(0) =0 from before, now set b(0) equal to 1
+                    set a(0) = 0; 		\set a(0) equal to 0
+	            --->sx			\Go to state sx (stay put)
+                @noleveron:  set b(0) = 1;	\if @noleveron(if b(0) isn't equal to 0) then set b(0) equal to 1
+                    set a(0) = 0;		\set a(0) equal to 0
+                    --->sx			\and go to state sx(stay put)
+            @nopress: if b(0) = 1 [@stop, @nostop]	\If @nopress (a(0) was not greater than 1) perform an if/if not operation on b(0) for if it's equal to 1
+                @stop: set b(0) = a(0);		\If @stop(b(0)=1) then set b(0) equal to a(0) ???
+                    set a(0) = 0;		\Set a(0) equal to 0
+                    set i = 0;			\Set i(time lever is held down in a trial) equal to 0
+                    z7;				\Then issue zpulse z7(Left lever stop counting time)
+                    --->sx			\Then go to state sx(stay put)
+                @nostop:  set b(0) = a(0);	\If @nostop(b(0) is not equal to 1) then set b(0) = a(0)
+                    set a(0) = 0;		\Then set a(0) equal to 0
+                    --->sx			\Then go to state set sx(stay put)
+    #Z3: --->s2			\This whole time...waiting and if recieve z3(left lever retracted) then go to state 2 (will repeat this whole thing over again)
+
+S4,        \=====right lever-down processing====
+    #R^RLever2: z8;	\If in state 2 a z2(Left lever extended) was recieved we come here and wait for a response on the right lever, issue a z8(right lever begin counting)
+	add a(1);	\add a(1)
+        --->sx 		\Go to state sx(stay put)
+    .01": if a(1) > 0 [@press, @nopress]	\after a tenth of a sec, perform an if/if not operation on a(1) for if it's greater than 0
+            @press: if b(1) = 0 [@leveron, @noleveron]	\If @press(a(1) is greater than 0), perform an if/if not operation on b(1) for if equal to 0
+                @leveron: set b(1) = 1;		\If @leveron(b(1) is = 0), then set b(1) = 1
+                    set a(1) = 0; 		\Also, set a(1) equal to 0
+                    --->sx			\And go to state sx(stay put)
+                @noleveron: set b(1) = 1;	\If @noleveron(b(1) doesn't equal 0), then set b(1) = 1
+                    set a(1) = 0;		\Set a(1) equal to 0
+                    --->sx				\Go to state sx(stay put)
+            @nopress: if b(1) = 1 [@stop, @nostop]	\If @nopress(a(1) is not greatet than 0), then prefrom an if/if not operaton on b(1) for if it's = 1 
+                @stop: set b(1) = a(1);		\If @stop (b(1) is = 1), then set b(1) = a(1)
+                    set a(1) = 0;		\Set a(1) equal to 0
+                    set i = 0;			\Set i(time lever is held down for) equal to 0
+	            z9;				\Then issue a zpulse z9(Right lever stop counting)
+                    --->sx			\Go to state set sx(stay put)
+                @nostop: set b(1) = a(1);	\If @nostop(b(1) is not = to 1), then set b(1) = a(1)
+                    set a(1) = 0;		\Then set a(1) equal to 0
+                    --->sx			\Then go to state sx(stay put)
+    #Z4: --->s2			\This whole time....if you get a z3(right lever retract) then go back up to state 2 and start this whole thing over again
+
+
+S.S.5,    \===LEFT LEVER CONTINGENCY EVALUATION===
+S1,        \=====initialization====
+    #start: --->s2				\When a start command is recieved, then go to state 2
+
+S2,        \=====wait for z-pulse to start====
+    #Z6: add s(0);				\When a z6(Left lever begin counting time) is recieved, add s(0)(lever record for left(0))
+        show 2, LLever, s(0);		   ??????\Show 2(Reins Obtained) call it LLever, and set it equal to s(0) (left lever record)\\\\??????
+        add p; set w(p) = ^LLeverDown+T;	\add p(trial time counter), and set w(p)(time and event codes) euqal to Left lever down plus the time
+	--->s3					\Then go to state set 3
+
+S3,        \=====count while waiting for z-pulse to stop====
+    0.01": add i;				\After one tenth of a second, add i(time lever is held down in a trial)
+        if i >= y [@over, @notover]        	\Check if LeverDown over....perform an if/if not operation on i(time lever held down) for i greater than y(Lever down duration)
+            @over: z3;				\If @over(i is greater than y, or hold longer than required time), then issue z3(Left lever retracts & Rein)
+                z4;			   ??????\Also issue z4(Right lever retracted)/???????
+		add p; set w(p) = ^LLeverUp + T;	\add p(trial time counter), set w(p)(time and event code) equal to left lever up plus the time
+                --->s4					\Then go to state 4
+            @notover: --->sx			\If @notover(i is not greater than y, or hold shorter than required time), go to state sx(stay here and keep checking)
+    #Z7: add p; set w(p) = ^LLeverUp + T; 	\If recieve a z7(Left lever stop counting time), add p(trial time counter), set w(p)(time and event code) equal to left lever up plus time
+	--->s2					\Then go to state set 2
+
+S4,	\====loop back==
+    #Z10: --->s2		\We came here if press dur met requirement...If recieve z10(Trail start and contingency reset), then go back to state 2, or loop back around
+
+
+S.S.6,    \===RIGHT LEVEL CONTINGENCY EVALUATION===
+S1,        \=====initialization====
+    #start: --->s2				\When a start command is recieved, go to state set 2
+
+S2,        \=====wait for z-pulse to start====
+    #Z8: add s(1);				\If recieve z8(Right lever begin counting), add s(1)(lever record for right(1))
+        show 2, RLever, s(1);		     ??????\Show 2(Reins Obtained), call it RLever, and set it equal to s(1)\??????
+	add p; set w(p) = ^RLeverDown+T;	\Then add p(trial time counter), set w(p)(time and event code) equal to Right lever down plus the time
+	--->s3					\Then go to state 3
+
+S3,        \=====count while waiting for z-pulse to stop====
+    0.01": add i;				\After one tenth of a second has passed, add i(time the lever is held down in a trial)
+        if i >= y [@over, @notover]                \Check if LeverDown over....perform an if/if not operation on i for i greater than y(lever down duration)
+            @over: z3;			     ?????\If @over(i is greater than y...or lever held longer than required), then issue z3(left lever retracted)\????
+                z4;				\Also, issue z4
+		add p; set w(p) = ^RLeverUp + T;	\Also, add p(trial time counter), set w(p)(time and event code) equal to right lever up plus the time
+                --->s4					\Then go to state 4
+            @notover: --->sx			\If @notover(i not greater than y...lever not held longer than required dur), then go to state sx(stay put and keep checking)
+    #Z9: add p; set w(p) = ^RLeverUp + T;  	\If recieve a z9(Right lever stop counting), then add p(trial time counter), and set w(p)(time and event code) equal to right lever up plus the time
+	--->s2					\Then go to state 2
+
+S4,	\====loop back==
+    #Z10: --->s2		\We came here if the duration requirment was met....wait for a zpulse z10(Trial starrt and contingency reset), then go to state 2
+
+
+S.S.7,    \===SESSION ENDER===
+S1,        \=====initialization====
+    #start: --->s2		\After a start command go to state 2
+
+S2,        \=====wait for z-pulse====
+    #Z5: --->s3			\Wait here util z5(shut everything down), then go to state 3
+
+S3,        \=====shut down everything====
+    0": OFF^house;				\After 0 seconds turn off the house light
+        add p; set w(p) = ^HouseLightOff + T;	\Add p(trial time counter), set w(p)(time and event code) equal to houselight off plus the time
+        OFF^fan;				\Also, turn off the fan
+        add p; set w(p) = ^OffFan + T;		\Then, add p(trial time counter), set w(p)(time and event code) equal to fan off plus the time
+        add p; set w(p)= ^EndSession + T;	\Also, add p(trial time counter), set w(p)(time and event code) euqual to end session plus the time
+        add p; set w(p)=-987.987;		\Also, add p(trial time counter), set w(p)(time and event code) equal to -987.987(will close w(p) array so no extras arrays
+        --->stopabortflush			\Will save the stuff to the appropriate file locations (so I think ???)
+
+
+S.S.8,    \===BEEP!===
+S1,        \=====initialization====
+    #start: --->s2				\When recieve a start command, go to state 2
+
+S2,        \=====wait for z-pulse====
+    #Z11: ~SetFreq (MG,BOX, 3000);~;		\In state 2 wait for zpulse....if z11(Beep!)
+	~ToneOn(MG,Box);~;			\????(Descriptions/tells box what beep to use???)
+	add p; set w(p) = ^ToneOn1 + T;		\Add p(trial time counter), set w(p)(time and event code) equal to tone on plus the time
+	--->s3					\Go to state 3
+
+S3,        \=====tone ender====
+    0.5": ~ToneOff(MG,Box);~;			\After 1/2 second, turn the tone off (???stuff I don't know???)
+	add p; set w(p) = ^ToneOff1 + T;	\Add p(trial time counter), set w(p)(time and event code) equal to tone off plus the time
+	--->s2					\Go to state 2
+
+
+
+
+
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

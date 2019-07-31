@@ -1,0 +1,183 @@
+\ ******************************************************************
+\
+\                         CRF for Lever Press
+\
+\ ******************************************************************
+\
+\
+\                        C O M M E N T S
+\
+\ Created 7/25/05 by Kathleen Taylor; modified 9/17/05
+\ 2 Pellets are delivered after each lever press that occurs after delay interval
+\ Program ends at 60 minutes, or 100 earned pellets, which ever comes first.
+
+
+
+
+\  CONSTANTS USED IN THIS PROGRAM
+
+
+                  \  Inputs ****************************
+^Lever = 3 
+^BackBeam = 2
+^FrontBeam = 1
+^hdentry = 4
+
+                  \  Outputs ****************************
+^RedLight = 1    
+^White = 2
+^Green = 3
+^Pellet = 4
+^Clicker = 5
+
+^House = 7   
+^Fan = 8
+
+
+\  VARIABLES USED IN THIS PROGRAM
+\   a = head entry counter
+\   b = head entry holder
+\   c = master timer (in seconds, with 1/10s resolution)
+\   d = event counter (used with u and v arrays)
+\   e = event counter (used with w array - IRT's)
+\   f = 
+\   g = 
+\   h = 
+\   i = 
+\   j = 
+\   k = 
+\   l = pellet counter
+\   m =
+\   n = 
+\   o = 
+\   p = 
+\   q = 
+\   r = interval since last bar press
+\   s = 
+\   t = 
+\  (u) = event identity array (see KEY below)
+\  (v) = event time array (records time of u events)
+\  (w) = event IRT array (records time between bar presses)
+\   x = 
+\   y = 
+\   z = variable for DRL interval
+
+
+\  SHOW POSITIONS
+\  1 = master timer
+\  2 = 
+\  3 = 
+\  4 = 
+\  5 = 
+
+
+dim u=100000
+dim v=100000
+dim w = 100000
+
+
+\   Z-PULSES USED IN THIS PROGRAM
+
+\   z1 = DRL Controller
+\   z2 = 
+\   z3 =  
+\   z4 =  
+\   z5 = 
+\   z6 = drop pellet
+\   z7 = 
+\   z8 = 
+\   z9 = 
+
+
+
+\CODES FOR EVENT RECORDER
+
+\	2 = trial start
+\	3 = ITI start
+\	4 = Bar press start
+\	5 = Bar Press end
+\	6 = reinforcer delivered
+\	99 = session finish
+
+S.S.1,   \session controller
+
+s1,
+   	#start: ON^Fan; ON^Redlight; set z=16 ---> s2
+s2,
+	.1": if (l=100) OR (c >=3600) [@end, @more]
+		@end: --->s3
+		@more:--->s2
+s3,
+	.05": OFF^RedLight; set u(d) = 99; set v(d) = c;set d = d + 1;
+ 			set u(d) = -987.987; set v(d) = -987.987;---> stopabortflush
+S.S.2   \Bar press recorder
+s1,
+	#start: --->s2
+s2,
+   	.1": if a > 0 [@press, @nopress]
+		@press: show 5, Lever, 1; if b = 0 [@leveron, @noleveron]
+			@leveron: set u(d) = 4; set v(d) = c;set d = d + 1;
+ 			set u(d) = -987.987; set v(d) = -987.987;set b = 1; set a = 0; z1 --->s2
+			@noleveron: set b = 1; set a = 0--->s2
+		@nopress: show 5, Lever, 0; if b = 1 [@stop, @nostop]
+			@stop:set b = a; set a = 0; set u(d) = 5;set v(d) = c;
+			set d = d + 1; set u(d) = -987.987; set v(d) = -987.987 --->s2
+			@nostop:set b = a; set a = 0--->s2 
+    	#R^lever: set a = a + 1--->sx 
+
+S.S.3,     \DRL Reinforcement Controller
+s1,
+	#z1: if r >=z [@Pellet, @Nope]
+		@Pellet: z6; set w(e) = r; set e = e + 1; set w(e) = -987.987; set r=0 --->s1
+		@Nope: set w(e) = r; set e = e + 1; set w(e) = -987.987; set r=0 --->s1
+
+S.S.4,    \ REINFORCEMENT Generator
+s1,
+   	#z6: ON^pellet--->s2
+s2,
+   	.05":OFF^pellet;add l;show 4, pellets, l;set u(d) = 6;set v(d) = c;
+           		set d = d + 1; set u(d) = -987.987; set v(d) = -987.987--->s3
+s3,
+	.1": ON^pellet --->s4
+s4,
+	.05": OFF^pellet --->s1
+
+S.S.5,  \MASTER TIMER
+s1,
+	#start:--->s2
+s2,
+	.1": set c = c + .1; set r= r + .1--->sx
+
+S.S.6,  \show timers
+s1, 
+        	#start:--->s2
+s2,
+   	1": show 1, Session, c; --->sx
+   
+S.S.7,  
+s1,
+  #R^FrontBeam: Add y --->sx 
+  .1": if y >= 5 [@BeamBreak, @NoBeamBreak]
+                     @Break: add p; set u(d) = 7; set v(d) = c;set d = d + 1;
+ 				set u(d) = -987.987; set v(d) = -987.987; SET y = 0 ---> s2
+                     @NoBreak: Set y = 0 ---> s1
+
+S2,     
+  .2": if y = 0 [@EndBreak, @NoEndBreak]
+		@EndBreak: ---> S1
+  		@NoEndBreak: --->s2
+
+S.S.8,  
+s1,
+  #R^BackBeam: Add x --->sx
+  .1": if x >= 5 [@BeamBreak, @NoBeamBreak]
+                     @Break: add q; set u(d) = 8; set v(d) = c;set d = d + 1;
+ 				set u(d) = -987.987; set v(d) = -987.987; set x = 0 ---> s2
+                     @NoBreak: Set x = 0 ---> s1
+
+S2,     
+  .2": if x = 0 [@EndBreak, @NoEndBreak]
+		@EndBreak: ---> S1
+  		@NoEndBreak: --->s2
+
+

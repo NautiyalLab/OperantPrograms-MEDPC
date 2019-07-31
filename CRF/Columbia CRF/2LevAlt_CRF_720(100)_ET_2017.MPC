@@ -1,0 +1,268 @@
+\                        C O M M E N T S
+\
+\ Two Lever CRF
+\ session lasts for 720 min or 100 reinforcers
+\ Lever retracts after 1 reinforcer for ITI of mean=30s
+\ Left and right levers alternate randomly
+\ KTaylor 02/13/14
+\ SCanetta 07/10/14; modified 7/11/14 for toggle lever inputs
+\ Inputs and outputs set for RNAC boxes
+\ Levers retract after each press.  To change, alter the value of m in S.S.4/S3
+
+
+
+DISKFORMAT = 13
+DISKVARS = W,R,S
+DISKCOLUMNS = 1
+
+                   \  Inputs ****************************
+^headIN = 4        \  IR head entry detector
+^headOUT = 4       \ IR head exit detector
+^LLever = 2       \  left lever press
+^RLever = 1       \  right lever press
+
+
+                   \  Outputs ****************************
+^leftlever = 8
+^rightlever = 7
+^dipper = 6        \ On Liquid Dipper
+^house = 1         \houselight 
+
+
+
+\  VARIABLES USED IN THIS PROGRAM
+\   a = holder for lever press start
+\   b = holder for lever press end
+\   c = master timer (in seconds, with 1/10s resolution)
+\   d = ITI duration holder
+\   e = Lever choice holder
+\   f = Right Lever Out indicator
+\   g = Left Lever Out indicator
+\   h = list for random lever insertion choice
+\   i = list array of ITI durations
+\   j = dipper counter
+\   k = session clock
+\   l =
+\   m = resetting dipper counter
+\   n =
+\   o =
+\   p =
+\   q
+\   r = Left press record
+\   s = Right press record
+\   t = master timer
+\   u
+\   v
+\  (w) = data array
+\   x =
+\   y =
+\   z =
+
+
+\  \  SHOW POSITIONS
+\  1 = Right lever responses
+\  2 = Left lever responses
+\  3 = Trial counter
+\  4 = Session Time (minutes)
+\  5 =
+
+\======================================================
+\ Event codes for time stamped events in data array
+
+
+^DipOn = 0025
+^DipOff = 0026
+^LLeverOn = 0027
+^RLeverOn= 0028
+^LLeverOff = 0029
+^RLeverOff = 0030
+^LightOff1 = 0031
+^LightOff2 = 0032
+^LightOff3 = 0033
+^LightOff4 = 0034
+^LightOn1 = 0041
+^LightOn2 = 0042
+^LightOn3 = 0043
+^LightOn4 = 0044
+^ToneOff1 = 0051
+^ToneOff2 = 0052
+^ToneOff3 = 0053
+^ToneOff4 = 0054
+^ToneOn1 = 0061
+^ToneOn2 = 0062
+^ToneOn3 = 0063
+^ToneOn4 = 0064
+^WNoiseOff1 = 0071
+^WNoiseOff2 = 0072
+^WNoiseOff3 = 0073
+^WNoiseOff4 = 0074
+^WNoiseOn1 = 0081
+^WNoiseOn2 = 0082
+^WNoiseOn3 = 0083
+^WNoiseOn4 = 0084
+
+^StartTrial = 0111
+^EndTrial = 0112
+^StartSession = 0113
+^EndSession = 0114
+^HouseLightOff = 0115
+^HouseLightOn = 0116
+^OnFan = 0117
+^OffFan = 0118
+^StartIti = 0121
+^EndIti = 0122
+^LightOffStan = 0201
+^LightOnStan = 0202
+^LightOffComp = 0203
+^LightOnComp = 0204
+^LightOffCtrl = 0205
+^LightOnCtrl = 0206
+^FeedStan = 0207
+^FeedComp = 0208
+^StartStanFlash = 0209
+^StopStanFlash = 0211
+^StartCompFlash = 0212
+^StopCompFlash = 0213
+^STNonGapNonProbe = 0214
+^STNonGapProbe = 0215
+^STGapNonProbe = 0216
+^STGapProbe = 0217
+
+^ProbeTrial = 0221
+^AutoTrial = 0222
+
+^PokeOff1 = 1001
+^PokeOff2 = 1002
+^PokeOff3 = 1003
+^PokeOff4 = 1004
+^PokeOn1 = 1011
+^PokeOn2 = 1012
+^PokeOn3 = 1013
+^PokeOn4 = 1014
+^LPressOn = 1015
+^RPressOn = 1016
+^LPressOff = 1017
+^RPressOff = 1018
+^PokeOffStan = 1301
+^PokeOnStan = 1302
+^PokeOffComp = 1303
+^PokeOnComp = 1304
+^PokeOffCtrl = 1305
+^PokeOnCtrl = 1306
+
+^FeederLightOn = 0101
+^FeederLightOff = 0102
+
+\================================================================
+
+
+\Dimensionalize Event and Time code array
+dim w=10000
+dim a=2
+dim b=2
+dim k=4
+
+
+\ITI duration list (in hundredths of seconds)
+list i = 300,300,400,500,600,600,700,700,800,900,1000,1000,1100,
+     1200,1300,1400,1500,1500,1600,1700,1800,1900,2000,2200,2300,
+     2400,2500,2700,2800,2900,3000,3200,3200,3400,3600,3800,4000,
+     4200,4400,4700,4900,5300,5600,6000,6400,6900,7500,8200,9300,9800
+
+list h = 1,1,2,2
+
+\===============================
+\   Z-PULSES USED IN THIS PROGRAM
+\ z1 = left lever press indicator
+\ z2 = right lever press indicator
+\ z3 = end session
+\ z4 =
+\===============================
+
+\===============================
+\  Show Positions
+\ 1 = Session Timer
+\ 2 = Left Presses
+\ 3 = Right Presses
+\ 4 = Reinforcers
+\ 5 = HE indicator
+\===============================
+
+
+s.s.1,  \ Clock for Time-Stamped event codes
+s1,
+    0":     ~initANL926;~;~SetRack (MG, 2);~;
+            ~SetAmp (MG,BOX, 90);~;
+               ~SetRF (MG,BOX, 10);~;~SetFreq (MG,BOX, 2500);~;
+        set p=-1; --->s2
+s2,
+    .01":    set T=T+100000 --->sx
+
+S.S.2,    \Program controller
+s1,
+    #start:    add p; set w(p)= ^StartSession + T;
+        \ON^fan; add p; set w(p)= ^OnFan + T;
+        ON^house; add p; set w(p)= ^HouseLightOn + T; z1--->s2
+s2,
+    720':    --->s3
+    #z5:    --->s3
+s3,
+    1":    OFF^house;add p; set w(p) = ^HouseLightOff + T;
+        \OFF^fan;add p; set w(p) = ^OffFan + T;
+        add p; set w(p)= ^EndSession + T;
+        add p; set w(p)=-987.987;--->stopabortflush
+
+s.s.3,  \Trial and ITI Controller
+s1,
+    #start: set d=0 --->s2
+s2,
+    d#T:    add p; set w(p)=^StartTrial+T; randd e=h; if e=1[@onLeft,@onRight]
+            @onLeft: ON^Leftlever; add p; set w(p)=^LLeverOn+T;set f=1 --->s3
+            @onRight: ON^Rightlever; add p; set w(p)=^RLeverOn+T;set f=2 --->s3
+s3,
+    #R^LLever: add p; set w(p)= ^LPressOn+T;z6; add r; show 3, LeftPress, r --->s4
+    #R^RLever: add p; set w(p)= ^RPressOn+T;z6; add s; show 2, RightPress, s --->s4
+s4,    \wait for dipper over
+        #z1:    --->s3    \next press will be reinforced
+    #z4:    --->s2    \initiate ITI
+
+S.S.4, \Reinforcement generator
+s1,
+    #z6:    add m; ON^dipper; add j; show 4, Dips, j; z9;
+        add p; set w(p)=^DipOn+T--->s3
+s2,
+    .5":    ~ondur(MG,BOX,200);~;--->s4
+s3,
+         4.5":    OFF^dipper;add p;set w(p)=^DipOff+T;
+        if j>99 [@end, @more]
+            @end: z5 --->s1
+            @more: if m>1 [@ITI, @more]
+                    @ITI:    set m=0; add p; set w(p)=^EndTrial+T;randd d=i;if f=1[@left, @right]
+                            @left: Off^Leftlever; add p; set w(p)=^LLeverOff+T; z4 --->s1
+                            @right: Off^Rightlever; add p; set w(p)=^RLeverOff+T; z4--->s3
+                    @more:    z1--->s1
+
+S.S.5,  \Head Entry (Input 3) COUNTER
+s1,
+    #Start: Show 5, HeadIn, 0--->S2
+s2,
+    #R^headIN:    add x; set w(x) = ^PokeOn1 + T---> sx
+    
+S.S.6, 	\Reinforcered Retrieved 
+s1,
+    #start: --->s3
+s2,
+    .1":    if x>0 [@Ret, @noRet]
+            @Ret: add v;show 5,ReinfRetr,v; --->s3
+            @noRet:  --->s2
+s3,
+    #z9: set x=0 --->s2 
+
+S.S.9, \Session Duration Clock
+s1,
+    #start:--->s2
+s2,
+    1":    set k(0)=k(0)+.01; if k(0)>.59 [@AddMin, @NoAdd]
+            @AddMin: add k(1); set k(0)=0; set k(2)=k(0)+k(1);
+                 show 1, Session, k(2)--->s2
+            @NoAdd: set k(2)=k(0)+k(1); show 1, Session, k(2)--->s2

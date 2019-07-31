@@ -1,0 +1,202 @@
+\                        C O M M E N T S
+\
+\ Variable Time Feeder Training ~mean 45 sec.
+\ 10.5 sec dip duration--->iti
+\ 
+\
+\ 
+\
+\ Gray Herzberg 4/27/04; modified 6/20/12 Kathleen Taylor
+
+\only save W, P variable to data file*******
+DISKFORMAT = 13.1
+DISKVARS = a, W    \"DISKVARS" only prints selected variables to datafile
+
+                  \  Inputs ****************************
+^headIN = 3       \  IR head entry detector
+
+^LLever2 = 1       \  left lever press
+^RLever2 = 2       \  right lever press
+ 
+
+                  \  Outputs ****************************
+  
+^dipper = 3        \ On Liquid Dipper
+
+^house = 7         \houselight
+
+	\CONSTANTS***********************
+^DipDuration = 5   \dipper up duration (sec)
+
+
+
+\  VARIABLES USED IN THIS PROGRAM
+\   a = array of poke latencies while dipper is up
+\   b = counter of pokes while dipper is up
+\   c = session clock (displayed in Column 1)
+\   d = poke latency timer (reset with every trial)
+\   e = # head entries per dipper, reset with each dip
+\   f 
+\   g
+\   h
+\   i = list array of ITI durations
+\   j = Number of dippers
+\   k 
+\   l 
+\   m
+\   n
+\   o
+\   p = counter for w array
+\   q
+\   r
+\   s
+\   t
+\   u 
+\   v 
+\  (w) = time and event code for matlab
+\   x = ITI dur, selected from list i
+\   y
+\   z (reserved)
+
+
+\  SHOW POSITIONS
+\  1 = Session Timer
+\  2 = Dipper Timer
+\  3 = dipper counter
+\  4 = 
+\  5 = head entries
+\  6 = 
+
+
+\======================================================
+\ MATLAB standardized codes
+
+^Feed1 = 0021
+
+^DipOn = 0025
+^DipOff = 0026
+
+^StartTrial = 0111
+^EndTrial = 0112
+
+^StartSession = 0113  
+^EndSession = 0114  
+
+^HouseLightOff = 0115
+^HouseLightOn = 0116 
+
+^ToneOn1 = 0061
+
+
+
+
+^PokeOff1 = 1001 
+^PokeOn1 = 1011 
+
+
+\================================================================
+
+
+\Dimensionalize Event and Time code array
+dim a=1000
+dim w=10000
+dim c=3
+
+\ITI duration list (in hundredths of seconds)
+list i = 140, 270, 720, 750, 1050, 1370, 1600, 2840, 3150, 3330, 3700, 3980, 5620, 5640, 6640, 7100, 9880, 10210, 10660, 10750
+\===============================
+\   Z-PULSES USED IN THIS PROGRAM
+\ z1 = dipper up (initiate timer D)
+\===============================
+
+s.s.1,  \MATLAB TIMER "T"
+s1,     
+        0": 	SET p = -1; set b = -1--->s2
+s2,    
+        .02": 	SET T = T + 100000 --->sx  \Keeps time in 50th of a second
+    
+S.S.2,	\INITIALIZE 
+s1,
+        #start:	~initANL926;~;~SetRack (MG, 2);~;
+               	~SetAmp (MG,BOX, 90);~;~SetRF (MG,BOX, 10);~;~SetFreq (MG,BOX, 2500);~;
+               
+               	ON^house; add p; set w(p)= ^HouseLightOn + T---> s2       
+s2,
+        30':	--->s3
+	#z4: 	--->s3
+s3,
+	.01":	OFF^house;add p; set w(p) = ^HouseLightOff + T;
+            	
+            	add p; set w(p)= ^EndSession + T;
+            	add p; set w(p)=-987.987;
+            	add b; set a(b)= -99;            
+            	add b; set a(b) = -987.987--->stopabortflush
+
+s.s.3,  \Reinforcer controller - Dippers
+s1,
+        #start:	add p; set w(p)= ^StartSession+T;set x=100 --->s2
+s2,
+	x#T: 	randd x=i;
+         	add j;show 3, Dippers,j;
+         	ON^dipper;z1;add p; set w(p)=T+^DipON--->s3
+s3, 
+         .5":~ondur(MG, Box, 200);~;add p;set w(p)=T+^ToneOn1--->s4
+s4,
+         #R^headIN:---> s5
+s5,
+         10": 	z2; OFF^dipper; add p; set w(p)=T+^DipOff;
+		if j = 20[@end, @noend]   \Change Here for Different # of Dippers
+                      @end: z4 --->s1
+                      @noend: z3--->s2     
+
+\S.S.3 \Reinforcer Controller - Pellets
+\s1,
+\    	#start:	add p; set w(p)=^StartSession+T;set x=100 --->s2
+\s2,
+\	x#T: 	randd x=i;
+\         	add j;show 3,Pellets,j;
+\         	ON^Pellet;z1;add p; set w(p)=T+^Feed1+T;--->s3
+\s2,
+\    	.05": 	OFF^Pellet;--->s3
+\s3,     
+\    	.1":  	ON^Pellet;add p;set w(p)=^Feed1+T; --->s4  
+\s4,
+\    	.05": 	OFF^Pellet --->s5
+\s5,
+\	.3":	~ondur(MG, BOX, 200);~;add p;set w(p)=T+^ToneOn1--->s6
+\s6,
+\         #R^headIN:---> s7
+\s7,
+\         10": 	z2; if j = 20[@end, @noend]   \Change Here for Different # of pellets
+\                      @end: z4 --->s1
+\                      @noend: z3--->s2      
+        
+S.S.4,  \Head Entry (Input 3) COUNTER
+S1,  
+	#START:SHOW 5,HeadIn,0--->S2
+S2,  
+	#R^headIN: SHOW 5,HeadIn,1; add p; set w(p)=^PokeOn1+T---> sx
+	
+
+s.s.5,  \Dipper Up Timer (D variable)
+s1,
+	#z1: 	set d=0--->s2
+s2,
+	0.1":	set d=d+0.1;show 2,DipUpTime,d--->sx
+	#z2:	--->s1
+
+s.s.6, \latency to first head poke after reinforcer
+s1,
+	#z1:--->s2
+s2,
+	#R^headIN: set b=b+1;set a(b)=d--->s1
+	#z2:--->s1
+
+S.S.8, \Session Duration Clock
+s1,
+	#start:--->s2
+s2,
+	1":	set c(0)=c(0)+.01; if c(0)>.59 [@AddMin, @NoAdd]
+			@AddMin: add c(1); set c(0)=0; set c(2)=c(0)+c(1); show 1, Session, c(2) --->s2
+			@NoAdd: set c(2)=c(0)+c(1); show 1, Session, c(2)--->s2
+

@@ -1,0 +1,122 @@
+\ 			C O M M E N T S 
+ 
+\ CRF 60 Trial 60 Minutes 
+\ Eric Teboul 7/31/2017 
+\ Written for RNAC boxes. Check inputs and outputs 
+
+\only save W variable to data file*******
+DISKFORMAT = 13
+DISKVARS = E,L,W     
+DISKCOLUMNS = 1 
+
+\*********** INPUTS ************* 
+^headIN = 4        \  IR head entry detector
+
+^LLever = 2       \  left lever press
+^RLever = 1       \  right lever press
+^NoseThing = 3 	  \  Nose port head entry detector 
+
+\*********** OUTPUTS ************* 
+^leftlever = 8
+^rightlever = 7
+
+^rightlight=4
+^NoseThingLight = 2
+^dipper = 6       \ On Liquid Dipper
+^house = 1         \houselight 
+
+
+
+
+
+\Dimensionalize Event and Time code array
+dim w=10000
+dim a=2
+dim b=2
+dim e=3
+dim k=4
+dim r=2 
+dim o=4
+
+
+
+\ITI duration list (in hundredths of seconds)
+list i = 110, 126, 151, 226, 282, 463, 494, 610, 646, 763, 825, 961, 1096, 1135, 1152, 1217, 1238, 
+         1248, 1364, 1383, 1503, 1530, 1581, 1662, 1955, 2022, 2152, 2340, 2471, 2555, 2826, 2851, 
+         3017, 3152, 3212, 3381, 3727, 4049, 4094, 4173, 4319, 4370, 4501, 4577, 5054, 5118, 6022, 
+         6545, 6696, 6836, 7062, 7373, 7882, 11753, 12549, 12815, 13398, 14892, 14951, 16158
+
+
+
+
+
+
+s.s.1,  \MATLAB TIMER "T"
+s1,
+        0": SET p = -1; set m = 1--->s2
+s2,
+        .01": SET T = T + 100000 --->sx \Keeps time in 100th of a second
+
+S.S.3,    \INITIALIZE
+s1,
+    #start:    --->s2
+s2,
+    #z3: off^NoseThingLight; off^NoseThingLight; --->s3
+    60': off^NoseThing; off^NoseThing; --->s3 
+s3,
+    10": OFF^house; --->stopabortflush
+
+
+S.S.2,    \Trials
+s1,
+     #START: ---> s2 
+s2, 
+       .05": on^house; 
+	     on^NoseThingLight; 
+	     on^NoseThing; 
+	     add y; show 2, Trials, y; z12 ---> s3 
+s3, 
+     #R^NoseThing: add n; show 3, Nose Pokes, n; z6; ---> s5 
+s5, 
+     #z9: Off^NoseThingLight; off^NoseThingLight; off^house; 
+		   if y>59 [@end, @more]
+                       @end: z3 --->s1
+           	       @more: randd d=i ---> s2 
+	 
+
+S.S.6,  \Head Entry (Input 3) COUNTER
+s1,
+     #START:--->S2
+s2,
+      #R^headIN: add g; show 6, HE, g; 
+                 ---> sx
+
+
+S.S.5, \Dipper Delivery
+s1,
+    #z6:      ON^dipper; 
+               add l;Show 5, Dippers, l; --->s2
+s2,
+    5":    OFF^dipper; z9 --->s1 
+
+
+    
+S.S.8, \Session Duration Clock
+s1,
+    #start:--->s2
+s2,
+    1":    set k(0)=k(0)+.01; if k(0)>.59 [@AddMin, @NoAdd]
+            @AddMin: add k(1); set k(0)=0; set k(2)=k(0)+k(1);
+                 show 1, Session, k(2)--->s2
+            @NoAdd: set k(2)=k(0)+k(1); show 1, Session, k(2);--->s2
+
+S.S.10, \Trial Duration Clock  
+s1,
+    #start:--->s2
+s2,
+    #z12":    set o(0)=o(0)+.01; if o(0)>.59 [@AddMin, @NoAdd]
+            @AddMin: add o(1); set o(0)=0; set o(2)=o(0)+o(1);
+                 show 4, Session, o(2); --->s2
+            @NoAdd: set o(2)=o(0)+o(1); show 4, Trial Duration, o(2); --->s2
+
+

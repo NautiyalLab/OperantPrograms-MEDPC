@@ -1,0 +1,170 @@
+\ Copyright (C) 2013 MED Associates, All rights reserved.
+
+\ A926Freq.mpc
+\
+\ When the program is started it will issue the starting stimulus.  The program
+\ will then wait for a K-pulse to be issued.  There are five types of K-pulses
+\ that the program will respond to.  Each one causes the program to do a
+\ different action.
+\
+\ K1 - The program will add 200 to the current Frequency and then turn on the
+\      new Tone for the set Duration.
+\
+\ K2 - The program will subtract 200 from the current Frequency and then turn on
+\      the new Tone for the set Duration.
+\
+\ K3 - The program will set the Frequency to White Noise (0 Hz) and then turn on
+\      the White Noise for the set Duration.
+\
+\ K4 - The program will reset the Frequency to the default value of 1000 Hz and
+\      then turn on the Tone for the set Duration.
+\
+\ K5 - Turn on the Pulse Click at the selected Pulse Click Frequency for the set
+\      Duration.
+\
+\ The program records no data and has no end criteria.
+\
+\
+\
+\ SetRack          - Tells the ANL-926 driver which Rack holds all of the
+\                    ANL-926 cards.  This command should be sent before the
+\                    InitANL926 command.  This command only needs to be used
+\                    when the ANL-926 cards are not in Rack 1.
+\
+\ InitANL926       - Initializes the ANL-926 cards.  This command needs to be
+\                    issued first (exception: SetRack).  This command only needs
+\                    to be used once.
+\
+\ SetFreq/OnFreq   - Sets the Frequency (Hz) and/or turns on the Tone at the
+\                    selected Frequency
+\
+\ SetAmp/OnAmp     - Sets the Amplitude (dB) and/or turns on the Tone at the
+\                    selected Amplitude
+\
+\ SetRF/OnRF       - Sets the Rise/Fall Time (ms) and/or turns on the Tone with
+\                    the selected Rise/Fall Time
+\
+\ SetDur/OnDur     - Sets the Tone Duration (ms) and/or turns on the Tone for
+\                    the selected Duration
+\
+\ SetClickFreq/    - Sets the Pulse Click Frequency (pulses/s) and/or turns on
+\ PulseClick         the Pulse Click for the selected Duration
+\
+\ ToneOn/ToneOff   - Lock On/Off the Tone at the selected values
+\
+\ ClickOn/ClickOff - Lock On/Off the Pulse Click at the selected values
+\
+\
+\
+\ MG  - This is the MED-PC Global Pointer.  It allows the ANL-926 to pass back
+\       information about any errors that might occur.
+\
+\ BOX - This parameter specifies which ANL-926 the command is for.  When this
+\       program is running in Box 1, then the BOX parameter will equal 1 and the
+\       ANL-926 that is set to Node 1 will receive the command.  When this
+\       program is running in Box 2, then the BOX parameter will equal 2 and the
+\       ANL-926 that is set to Node 2 will receive the command, etc.  This
+\       allows the same program to be run in multiple Boxes and control the
+\       different Chambers.
+
+
+\ Inputs
+^LeftLever  = 1
+^RightLever = 2
+
+\ Outputs
+^Pellet     = 3
+^LeftLight  = 4
+^RightLight = 5
+^HouseLight = 7
+^Pump       = 8
+
+
+\ A() = Control Variables with Assigned Aliases as Defined
+Var_Alias Frequency (Hz)                  = A(0)  \ Default = 1000 Hz
+Var_Alias Amplitude (dB)                  = A(1)  \ Default = 100 dB
+Var_Alias Rise/Fall Time (ms)             = A(2)  \ Default = 10 ms
+Var_Alias Duration (ms)                   = A(3)  \ Default = 1000 ms
+Var_Alias Pulse Click Frequency (pulse/s) = A(4)  \ Default = 10 pulses/s
+
+^Freq  = 0
+^Amp   = 1
+^RF    = 2
+^Dur   = 3
+^Click = 4
+
+
+\ List Data Variables Here
+\  None
+
+
+\ List Working Variables Here
+\  A() = ANL-926 Control Variables
+
+
+DIM A = 4
+
+
+\ K-Pulses Used in this Program
+\  K1 = Increase the Frequency by 200 Hz
+\  K2 = Decrease the Frequency by 200 Hz
+\  K3 = Set the Frequency to White Noise (0 Hz)
+\  K4 = Reset the Frequency to the Default of 1000 Hz
+\  K5 = Turn on Pulse Click
+
+
+\***************************************************
+\                 A926FREQ Schedule
+\  S1 - Set Default Values
+\       Frequency                 (1000 Hz)
+\       Amplitude                 (100 dB)
+\       Rise/Fall Time            (10 ms)
+\       Duration                  (1000 ms)
+\       Pulse Click Frequency     (10 pulses/s)
+\***************************************************
+S.S.1,
+S1,
+  0.01": SET A(^Freq) = 1000, A(^Amp)   = 100, A(^RF)   = 10;
+         SET A(^Dur)  = 1000, A(^Click) = 10 ---> S2
+
+S2,     \ First Statement: Wait for START signal and then issue
+        \ starting stimulus
+        \
+        \ Second Statement: Update screen display with default values
+        \ for Control Variables.  This will show any changes made via
+        \ the "Configure | Change Variables" Window prior to START.
+  #START: ~SetRack(MG, 1);~;                 \ The ANL-926 cards are in Rack 1
+          ~InitANL926;~;                     \ Reset ANL-926
+          ~SetFreq(MG, BOX, A[0]);~;         \ Initialize Frequency
+          ~SetAmp(MG, BOX, A[1]);~;          \ Initialize Amplitude
+          ~SetRF(MG, BOX, A[2]);~;           \ Initialize Rise\Fall Time
+          ~SetDur(MG, BOX, A[3]);~;          \ Initialize Duration
+          ~OnFreq(MG, BOX, A[0]);~;          \ Issue Starting Stimulus
+          ---> S3
+  1": SHOW 1,Frequency,A(^Freq), 2,Amplitude,A(^Amp),    3,Rise/Fall,A(^RF);
+      SHOW 4,Duration,A(^Dur),   5,Pulse Click,A(^Click) ---> S2
+
+S3,
+  #K1: SET A(^Freq) = A(^Freq) + 200;        \ Increase Frequency
+       ~OnFreq(MG, BOX, A[0]);~ ---> S3
+  #K2: SET A(^Freq) = A(^Freq) - 200;        \ Decrease Frequency
+       ~OnFreq(MG, BOX, A[0]);~ ---> S3
+  #K3: SET A(^Freq) = 0;                     \ Select White Noise
+       ~OnFreq(MG, BOX, A[0]);~ ---> S3
+  #K4: SET A(^Freq) = 1000;                  \ Reset Frequency to 1000 Hz
+       ~OnFreq(MG, BOX, A[0]);~ ---> S3
+  #K5: ~PulseClick(MG, BOX, A[4]);~ ---> S3  \ Select Pulse Click
+
+
+\***************************************************
+\                  UPDATE DISPLAY
+\***************************************************
+S.S.2,
+S1,
+  #START: ---> S2
+
+S2,     \ Display the current Control Variable values
+        \ to the screen
+  1": SHOW 1,Frequency,A(^Freq), 2,Amplitude,A(^Amp),    3,Rise/Fall,A(^RF);
+      SHOW 4,Duration,A(^Dur),   5,Pulse Click,A(^Click) ---> S2
+

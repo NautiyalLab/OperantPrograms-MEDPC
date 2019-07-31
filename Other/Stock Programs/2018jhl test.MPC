@@ -1,0 +1,14 @@
+  \ FIrst programming in Pascal
+  \ Jun Ho Lee
+  \ 8/7/2018
+
+
+^House = 1
+
+S.S.1,
+S1,
+1": ON ^House ---> S2
+
+S2,
+5": OFF ^House ---> S1
+

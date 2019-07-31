@@ -1,0 +1,349 @@
+\                        C O M M E N T S
+\
+\ Delayed Discounting with Right Lever having small, immediate reward ~mean 40 sec. ITI
+\ 5 forced trials on each lever (10 total) then 20 choice trials
+\
+\ Gray Herzberg 7/25/05 as CRF
+\ Modified 10/3/12 by KTaylor as CRF
+\ Modified Feb 2013 by KNautiyal to make DD
+\ SSD 7/8/19 Added poke off
+
+
+
+\only save W variable to data file*******
+DISKFORMAT = 13
+DISKVARS = W    \"DISKVARS" only prints selected variables to datafile
+DISKCOLUMNS = 1
+
+                  \  Inputs ****************************
+^headIN = 3       \  IR head entry detector
+^LLever2 = 1       \  left lever press
+^RLever2 = 2       \  right lever press
+
+
+                  \  Outputs ****************************
+^leftlever = 1
+^rightlever = 2
+^dipper = 3        \ On Liquid Dipper
+^house = 7         \houselight
+^leftlight = 4      \stimulus lights above Left Lever
+^rightlight = 5     \stimulus lights abouve Right Lever
+
+
+
+\  VARIABLES USED IN THIS PROGRAM
+\   a = holder for lever press start
+\   b = holder for lever press end
+\   c = master timer (in seconds, with 1/10s resolution)
+\   d = ITI dur, selected from list i
+\   e =
+\   f = array
+\   g = head poking
+\   h =
+\   i = list array of ITI durations
+\   j =
+\   k = session clock
+\   l = number of large rewards
+\   m =
+\   n =
+\   o =
+\   p = w array
+\   q = head poking 
+\   r = lever press record
+\   s = number of small rewards
+\   t = master timer
+\   u
+\   v
+\  (w) = time and event code for matlab
+\   x = counter for multiple dipper presentation for large reward
+\   y =counter for L forced trials
+\   z =counter for R forced trials
+
+
+
+
+\======================================================
+\ MATLAB standardized codes
+\ *** = used in this program
+
+^Feed1 = 0021
+^Feed2 = 0022
+^Feed3 = 0023
+^Feed4 = 0024
+^DipOn = 0025   \***
+^DipOff = 0026   \***
+^LLeverOn = 0027 \***
+^RLeverOn= 0028  \***
+^LLeverOff = 0029 \***
+^RLeverOff = 0030 \***
+^LightOff1 = 0031
+^LightOff2 = 0032
+^LightOff3 = 0033
+^LightOff4 = 0034
+^LightOn1 = 0041
+^LightOn2 = 0042
+^LightOn3 = 0043
+^LightOn4 = 0044
+^ToneOff1 = 0051
+^ToneOff2 = 0052
+^ToneOff3 = 0053
+^ToneOff4 = 0054
+^ToneOn1 = 0061
+^ToneOn2 = 0062
+^ToneOn3 = 0063
+^ToneOn4 = 0064
+^WNoiseOff1 = 0071
+^WNoiseOff2 = 0072
+^WNoiseOff3 = 0073
+^WNoiseOff4 = 0074
+^WNoiseOn1 = 0081
+^WNoiseOn2 = 0082
+^WNoiseOn3 = 0083
+^WNoiseOn4 = 0084
+
+^StartTrial = 0111
+^EndTrial = 0112
+^StartSession = 0113  \***
+^EndSession = 0114   \***
+^HouseLightOff = 0115
+^HouseLightOn = 0116
+
+^StartIti = 0121
+^EndIti = 0122
+^LightOffStan = 0201
+^LightOnStan = 0202
+^LightOffComp = 0203
+^LightOnComp = 0204
+^LightOffCtrl = 0205
+^LightOnCtrl = 0206
+^FeedStan = 0207
+^FeedComp = 0208
+^StartStanFlash = 0209
+^StopStanFlash = 0211
+^StartCompFlash = 0212
+^StopCompFlash = 0213
+^STNonGapNonProbe = 0214
+^STNonGapProbe = 0215
+^STGapNonProbe = 0216
+^STGapProbe = 0217
+
+^ProbeTrial = 0221
+^AutoTrial = 0222
+
+^PokeOff1 = 1001
+^PokeOff2 = 1002
+^PokeOff3 = 1003
+^PokeOff4 = 1004
+^PokeOn1 = 1011
+^PokeOn2 = 1012
+^PokeOn3 = 1013
+^PokeOn4 = 1014
+^LPressOn = 1015
+^RPressOn = 1016
+^LPressOff = 1017
+^RPressOff = 1018
+^PokeOffStan = 1301
+^PokeOnStan = 1302
+^PokeOffComp = 1303
+^PokeOnComp = 1304
+^PokeOffCtrl = 1305
+^PokeOnCtrl = 1306
+
+^LargeReward = 1520
+^SmallReward = 1521
+
+
+\================================================================
+
+
+\Dimensionalize Event and Time code array
+dim w=10000
+dim a=2
+dim b=2
+dim k=4
+dim r=2
+
+\ITI duration list (in hundredths of seconds)
+list i = 110, 126, 151, 226, 282, 463, 494, 610, 646, 763, 825, 961, 1096, 1135, 1152, 1217, 1238, 1248, 1364, 1383, 1503, 1530, 1581, 1662, 1955, 2022, 2152, 2340, 2471, 2555, 2826, 2851, 3017, 3152, 3212, 3381, 3727, 4049, 4094, 4173, 4319, 4370, 4501, 4577, 5054, 5118, 6022, 6545, 6696, 6836, 7062, 7373, 7882, 11753
+
+\array of go (1) and no-go (0) trials, 10 listed...so every 10 trials will be blocks of even number of go and no-go trials
+list f = 0,0,0,0,0,1,1,1,1,1
+
+\=====================
+\   Z-PULSES USED IN THIS PROGRAM
+\ z1 = left lever press indicator
+\ z2 = right lever press indicator
+\ z3 = end session
+\ z8/9/10 = head poking
+\===============================
+
+\===============================
+\  Show Positions
+\ 1 = Session Timer
+\ 2 = Left Presses
+\ 3 = Right Presses
+\ 4 = Reinforcers
+\ 5 = HE indicator
+\ 6 = number of small rewards
+\ 7 = number of large rewards
+\===============================
+
+
+s.s.1,  \MATLAB TIMER "T"
+s1,
+        0": SET p = -1; set m = 1; set x = 0; set l=0; set s=0; set y=0; set z=0; --->s2
+s2,
+        .01": SET T = T + 100000 --->sx \Keeps time in 100th of a second
+
+S.S.2,    \INITIALIZE
+s1,
+           #start:~initANL926;~;~SetRack (MG, 2);~;
+        ~SetAmp (MG,BOX, 90);~;
+        ~SetRF (MG,BOX, 10);~;~SetFreq (MG,BOX, 2500);~;
+
+         ON^house; add p; set w(p)= ^HouseLightOn + T--->s2
+
+s2,  \end after 30 rewards or 60 minutes
+    #z3: Off^rightlever; Off^rightlight; add p; set w(p)=^RLeverOff+T; Off^leftlever; Off^leftlight; add p;         set w(p)=^LLeverOff+T;--->s3
+    60': Off^rightlever;Off^rightlight; add p; set w(p)=^RLeverOff+T;Off^leftlever; Off^leftlight; add p;         set w(p)=^LLeverOff+T;--->s3
+s3,
+        10": OFF^house;add p; set w(p) = ^HouseLightOff + T;
+
+            add p; set w(p)= ^EndSession + T;
+            add p; set w(p)=-987.987;--->stopabortflush
+
+s.s.3,  \TRIAL AND ITI GENERATOR
+    \Z2 is for small reward  (right)
+    \Z1 is for large reward (left)
+s1,
+        #start:add p; set w(p)= ^StartSession + T;--->s8
+
+s2,
+        #z2: Off^Rightlever; Off^rightlight; add p; set w(p)=^RLeverOff+T;Off^Leftlever; Off^leftlight; add p; set w(p)=^LLeverOff+T;
+         add n; ON^dipper; add j; show 4, Dips, j;
+         add s; show 6, SmallRewards, s; add p; set w(p)=^SmallReward+T;add p; set w(p)=^DipOn+T--->s3
+    #z1: Off^Rightlever; Off^rightlight; add p; set w(p)=^RLeverOff+T;Off^Leftlever; Off^leftlight; add p; set w(p)=^LLeverOff+T;---> s5
+
+
+s3,
+        .5":~ondur(MG,BOX,200);~;--->s4
+s4,
+         2":OFF^dipper;add p;set w(p)=^DipOff+T;
+        if j<10 [@forced, @choice]
+        @forced: randd d=i; --->s8
+        @choice: if j>30 [@end, @more]
+                    @end: z3 --->s1
+                    @more: randd d=i;--->s7
+
+s5,
+     0.5": add n; ON^dipper; add j; show 4, Dips, j;
+         add l; show 7, LargeRewards, l; add p; set w(p)=^LargeReward+T; add p; set w(p)=^DipOn+T; set x=0;--->s6
+
+s6,
+    3":OFF^dipper;add p;set w(p)=^DipOff+T;add x;
+    if x<3 [@another, @nomore]
+        @another: OFF^dipper--->s9
+        @nomore: if j<10 [@forced, @choice]
+        @forced: randd d=i; --->s8
+        @choice: if j>30 [@end, @more]
+                    @end: z3 --->s1
+                    @more: randd d=i;--->s7
+
+s7,
+        d#t: ON^rightlever;ON^rightlight; add p;set w(p)=^RLeverOn+T; ON^leftlever;ON^leftlight;add p;set     w(p)=^LLeverOn+T; set n=0--->s2
+
+
+s8,
+    d#t: randd y=f; if y=0 [@left,@right]
+    @left: ON^Leftlever; ON^leftlight;add p;set w(p)=^LLeverOn+T;---> s2
+    @right: ON^Rightlever; ON^rightlight;add p; set w(p)=^RLeverOn+T;---> s2
+
+s9,
+    .2": ON^dipper; ---> s6
+
+S.S.4,  \Bar Press Detector - Left Lever
+s1,
+    #Start: --->s2
+s2,
+       .05": if a(0) > 0 [@press, @nopress]
+            @press: if b(0) = 0 [@leveron, @noleveron]
+                   @leveron: z2;  add p; set w(p)= ^LPressOn+T;
+                           add r(0); show 2, LeftPress, r(0);
+                            set b(0) = 1; set a(0) = 0; --->s2
+                    @noleveron: set b(0) = 1; set a(0) = 0--->s2
+        @nopress: if b(0) = 1 [@stop, @nostop]
+                @stop:  add p;set w(p)= ^LPressOff+T;
+                      set b(0) = a(0); set a(0) = 0; --->s2
+                @nostop:set b(0) = a(0); set a(0) = 0; --->s2
+        #R^LLever2: set a(0)=a(0)+1; --->sx
+
+S.S.5,  \Bar Press Detector - Right Lever
+s1,
+    #Start: --->s2
+s2,
+       .05": if a(1) > 0 [@press, @nopress]
+            @press: if b(1) = 0 [@leveron, @noleveron]
+                    @leveron: z1; add p;set w(p)= ^RPressOn+T;
+                            add r(1); show 3, RightPress, r(1);
+                           set b(1) = 1; set a(1) = 0; --->s2
+                    @noleveron: set b(1) = 1; set a(1) = 0--->s2
+            @nopress: if b(1) = 1 [@stop, @nostop]
+                    @stop:   add p;set w(p)= ^RPressOff+T;
+                          set b(1) = a(1); set a(1) = 0; --->s2
+                    @nostop:set b(1) = a(1); set a(1) = 0; --->s2
+        #R^RLever2: set a(1)=a(1)+1; --->sx
+
+S.S.6,  \Head Entry (Input 3) COUNTER
+
+S1,
+    #START:SHOW 5,HeadIn,0; set q=0; --->S2
+
+S2,
+    #R^headIN:  add p; set w(p)=^PokeOn1+T;add q; SHOW 5,HeadIn,q; z10 ---> s3
+
+
+s3,
+    #z8 ---> s2
+
+
+
+
+s.s.7,  \Head still in checker part 1
+
+s1,
+    #z10 --->s2   \Z10 gets called when head first enters
+
+
+s2,
+    0": z9 ---> s3
+
+
+s3,
+    0.05": if g>0 [@headSTILLin, @headExit]
+        @headSTILLin: set g=0; ---> s2
+        @headEXIT: z8; add p; set w(p)=^PokeOff1+T;---> s1
+
+
+
+
+
+s.s.8, \Head still in checker part 2
+
+s1,
+    #z9: --->s2
+
+
+s2,
+    #R^headIN: set g=1; --->s3
+s3, 
+   0": --->s1
+
+
+S.S.9, \Session Duration Clock
+s1,
+    #start:--->s2
+s2,
+    1":    set k(0)=k(0)+.01; if k(0)>.59 [@AddMin, @NoAdd]
+            @AddMin: add k(1); set k(0)=0; set k(2)=k(0)+k(1);
+                 show 1, Session, k(2)--->s2
+            @NoAdd: set k(2)=k(0)+k(1); show 1, Session, k(2)--->s2

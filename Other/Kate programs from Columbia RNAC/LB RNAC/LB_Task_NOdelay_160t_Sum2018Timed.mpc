@@ -1,0 +1,425 @@
+\ 			C O M M E N T S 
+ 
+\ CRF 60 Trial 90 Minutes 
+\ Eric Teboul 7/31/2017 
+\ Laura Benoit 28Sep17
+\ Written for RNAC boxes. Check inputs and outputs 
+
+\only save W variable to data file*******
+DISKFORMAT = 13
+DISKVARS = E,L,W     
+DISKCOLUMNS = 1 
+
+\*********** INPUTS ************* 
+^headIN = 4        \  IR head entry detector
+^NoseThing = 3 	  \  Nose port head entry detector 
+^LLever = 2       \  left lever press
+^RLever = 1       \  right lever press
+
+
+\*********** OUTPUTS ************* 
+^leftlever = 8 
+^rightlever = 7 
+^leftlight = 5
+^rightlight = 4
+^NoseThingLight = 2
+^dipper = 6       \ On Liquid Dipper
+^house = 1         \houselight 
+
+
+\  VARIABLES USED IN THIS PROGRAM
+\  (a) = 
+\   b = delay times, selected from list h
+\   c = reinf retrieved left
+\   d = right vs left, selected from list g
+\  (e) = dim (trials, lcorr, rcorr)
+\   f = right vs left for dipper
+\   g = right vs left lever random list
+\   h = delay durations
+\   i = ITI
+\   j = ITI duration, selected from list i
+\  (k) = session duration clock 
+\   l = left dippers 
+\   m = time something???
+\   n = nose pokes 
+\  (o) = trial duration clock, latency clock 
+\   p = general counter 
+\   q = right dippers
+\  (r) = 
+\   s = reinf retrieved right
+\   t = master timer 
+\   u =  
+\   v = allow trial clock to restart
+\  (w) = time and event code for matlab 
+\   x = head entry
+\   y =  
+\   z =
+
+
+\  \  SHOW POSITIONS
+\  1 = Session time (minutes)  
+\  2 = Trial Counter 
+\  3 = Trial Time 
+\  4 = Left correct
+\  5 = Right correct 
+\  6 = Left dippers
+\  7 = Right dippers
+\  8 = Mean latency sample lever to choice lever
+\  9 = Left reinf retrieved
+\ 10 = Right reinf retrieved 
+\ 11 = Head entries
+\ 12 = Nosepokes
+\ 13 = Mean latency 2nd nosepoke to choice lever
+\ 14 = Left incorrect
+\ 15 = Right incorrect
+\ 36 = Total latency sample lever to choice lever
+\ 37 = Total latency 2nd nosepoke to choice lever
+
+\======================================================
+\ MATLAB standardized codes
+\ *** = used in this program
+
+^Feed1 = 0021
+^Feed2 = 0022
+^Feed3 = 0023
+^Feed4 = 0024
+^DipOn = 0025   \***
+^DipOff = 0026   \***
+^LLeverOn = 0027 \***
+^RLeverOn= 0028  \***
+^LLeverOff = 0029 \***
+^RLeverOff = 0030 \***
+^LightOff1 = 0031
+^LightOff2 = 0032
+^LightOff3 = 0033
+^LightOff4 = 0034
+^LightOn1 = 0041
+^LightOn2 = 0042
+^LightOn3 = 0043
+^LightOn4 = 0044
+^ToneOff1 = 0051
+^ToneOff2 = 0052
+^ToneOff3 = 0053
+^ToneOff4 = 0054
+^ToneOn1 = 0061
+^ToneOn2 = 0062
+^ToneOn3 = 0063
+^ToneOn4 = 0064
+^WNoiseOff1 = 0071
+^WNoiseOff2 = 0072
+^WNoiseOff3 = 0073
+^WNoiseOff4 = 0074
+^WNoiseOn1 = 0081
+^WNoiseOn2 = 0082
+^WNoiseOn3 = 0083
+^WNoiseOn4 = 0084
+^NoseThingON = 0085
+\\ ^NoseThing = 0086 already in input
+\\ ^NoseThingLight = 0087 already in input
+^NoseThingOFF = 0088 
+^NoseThingLightOFF = 0089
+^NoseThingLightON = 0090  
+^LDipOn = 0091   
+^LDipOff = 0092 
+^RDipOn = 0093 
+^RDipOff = 0094 
+\\ ^LeftLeverOFF = 0095 
+\\ ^RightLeverOFF = 0096
+^rretrievedleft = 0097
+^rretrievedright = 0098 
+
+^StartTrial = 0111
+^EndTrial = 0112
+^StartSession = 0113  \***
+^EndSession = 0114   \***
+^HouseLightOff = 0115
+^HouseLightOn = 0116
+
+^StartIti = 0121
+^EndIti = 0122
+^LightOffStan = 0201
+^LightOnStan = 0202
+^LightOffComp = 0203
+^LightOnComp = 0204
+^LightOffCtrl = 0205
+^LightOnCtrl = 0206
+^FeedStan = 0207
+^FeedComp = 0208
+^StartStanFlash = 0209
+^StopStanFlash = 0211
+^StartCompFlash = 0212
+^StopCompFlash = 0213
+^STNonGapNonProbe = 0214
+^STNonGapProbe = 0215
+^STGapNonProbe = 0216
+^STGapProbe = 0217
+
+^ProbeTrial = 0221
+^AutoTrial = 0222
+
+^PokeOff1 = 1001
+^PokeOff2 = 1002
+^PokeOff3 = 1003
+^PokeOff4 = 1004
+^PokeOn1 = 1011
+^PokeOn2 = 1012
+^PokeOn3 = 1013
+^PokeOn4 = 1014
+^LPressOn = 1015
+^RPressOn = 1016
+^LPressOff = 1017
+^RPressOff = 1018
+^PokeOffStan = 1301
+^PokeOnStan = 1302
+^PokeOffComp = 1303
+^PokeOnComp = 1304
+^PokeOffCtrl = 1305
+^PokeOnCtrl = 1306
+
+
+\================================================================
+
+
+\Dimensionalize Event and Time code array
+dim w=10000
+dim a=2
+dim e=5
+dim k=4
+dim r=2 
+dim o=11
+
+\list of delay durations (in hundredths of seconds) *change this to change delay durations
+list h = 0
+
+\ITI duration list (in hundredths of seconds)
+list i = 1000
+
+\list of alternate lever options at start of new trial 
+list g = 1, 2 
+
+
+\===============================
+\   Z-PULSES USED IN THIS PROGRAM
+\ z1  = right dipper delivery
+\ z2  = nosepoke start trial entry to start sample lever release
+\ z3  = shut down after required trials 
+\ z4  = left reinf retrieved
+\ z5  = right reinf retrieved
+\ z6  = left dipper delivery  
+\ z7  = second noseport on (sample lever pressed)
+\ z8  = choice lever release
+\ z9  = start ITI 
+\ z12 = restart trial clock  
+\ z13 =
+\ z14 =
+\ z15 = 
+\ z16 =
+\ z17 = sample lever hit
+\ z18 = choice lever hit
+\ z19 = noseport timed out
+\=============================== 
+
+s.s.1,  \MATLAB TIMER "T"
+s1,
+        0": SET p = -1; set m = 1--->s2
+s2,
+        .01": SET T = T + 100000 --->sx \Keeps time in 100th of a second
+
+S.S.3,    \INITIALIZE
+s1,
+    #start:    add p; set w(p)= ^StartSession+T;--->s2
+s2,
+    #z3: off^NoseThing; off^NoseThingLight; 
+         add p; set w(p) = ^NoseThingOff+T;
+         add p; set w(p) = ^NoseThingLightoff+T; --->s3
+    90': off^NoseThing; off^NoseThingLight; 
+         add p; set w(p) = ^NoseThingOff+T;
+         add p; set w(p) = ^NoseThingLightoff+T; --->s3
+    
+s3,
+    10": OFF^house; add p; set w(p) = ^HouseLightOFF+T;    
+        add p; set w(p)= ^EndSession + T;
+        add p; set w(p)=-987.987;--->stopabortflush
+
+
+S.S.2,    \Trials, First noseport
+s1,
+     #START: ---> s2
+
+s7,
+     .01": randd j=i ---> s2
+
+s2, 
+     j#t:  z12; set v=1;
+             on^house; add p; set w(p)= ^HouseLightON+T; 
+	     on^NoseThingLight; add p; set w(p) = ^NoseThingLightON+T; 
+	     on^NoseThing; add p; set w(p) = ^NoseThingON+T; 
+	     set e(1)=e(1)+1; show 2, Trials, e(1); ---> s3 
+s3, 
+     #R^NoseThing: add n; show 12, Nose Pokes, n; z2;
+		   add p; set w(p) = ^Nosething+T;  ---> s4
+s4, 
+     0.25": Off^NoseThing; off^NoseThingLight; ---> s5
+
+s5, 
+     #z9: off^house; add v; 
+	  add p; set w(p) = ^HouseLightOFF+T;   
+		   if e(1)>159 [@end, @more]
+                       @end: z3 --->s1
+           	       @more: randd j=i ---> s2 
+
+S.S.7 \Sample Lever Release 
+s1, 
+     #z2: randd d=g; if d=1 [@yes, @no] 
+	   @yes: on^leftlever; add p; set w(p)= ^LLeveron+T; ---> s2 
+	   @no: on^rightlever; add p; set w(p)= ^RLeveron+T; ---> s2 
+s2, 
+     #R^LLever: z17; set f=1; add p; set w(p) = ^LPressOn+T; ---> s3 
+     #R^RLever: z17; set f=2; add p; set w(p) = ^RPressOn+T; ---> s3 
+
+s3, 
+     0.25": z7;
+	    if f=1, [@yes, @no] 
+	        @yes: off^leftlever; add p; set w(p)=^LleverOFF+T ---> s1 
+	        @no:  off^rightlever; add p; set w(p)=^RleverOFF+T ---> s1   	 
+
+S.S.9 \Second Noseport after delay
+s1,
+     #z7: ---> s5
+
+s5,
+     .01": randd b=h;---> s2
+
+s2,
+     b#t: on^NoseThingLight; add p; set w(p) = ^NoseThingLightON+T; 
+	  on^NoseThing; add p; set w(p) = ^NoseThingON+T; ---> s3
+
+s3,
+     #R^NoseThing: add n; show 12, Nose Pokes, n; z8;
+		   add p; set w(p) = ^Nosething+T; ---> s4
+     5": z9; z19; off^NoseThing; off^NoseThingLight; ---> s1
+
+s4,
+     .25": off^NoseThing; off^NoseThingLight; ---> s1
+
+S.S.14 \Choice lever release
+s1,
+     #z8: on^LeftLever; 
+	  	add p; set w(p)= ^LLeverOn+T;
+          on^RightLever; 
+	  	add p; set w(p)= ^RLeverOn+T; --->s2
+
+s2,
+    #R^LLever: z18; add p; set w(p)= ^LPressOn+T; if f=1 [@same, @different]
+        @same: set e(4)=e(4)+1; show 14, L_Inc, e(4); --->s3
+        @different: z6;set e(3)=e(3)+1; show 5, R_Corr, e(3);--->s4
+    #R^RLever: z18; add p; set w(p)= ^RPressOn+T;if f=2 [@same, @different]
+        @same: set e(5)=e(5)+1; show 15, R_Inc, e(5); --->s3
+        @different: z1; set e(2)=e(2)+1; show 4, L_Corr, e(2); --->s4
+
+s3,
+    .25": off^LeftLever; 
+		add p; set w(p)= ^LLeverOff+T;
+          off^RightLever; 
+		add p; set w(p)= ^RLeverOff+T; 
+	  z9; --->s1
+
+s4,
+    .25": off^LeftLever;
+		add p; set w(p) = ^LLeveroff+T;
+          off^RightLever; 
+		add p; set w(p)= ^RLeverOff+T; --->s1   
+
+ 
+S.S.6,  \Head Entry (Input 3) COUNTER
+s1,
+     #START:--->S2
+s2,
+     #R^headIN: add x; show 11, HE, x; 
+                 add p; set w(p) = ^PokeOn1 + T---> sx
+
+
+S.S.5, \Dipper Delivery Left 
+s1,
+     #z1:   ON^dipper; z4; add p;set w(p)=^LdipON+T;
+               add l;Show 6, LDippers, l; --->s2
+s2,
+     5":    OFF^dipper;add p;set w(p)=^LDipOff+T; z9 --->s1 
+
+S.S.11, \Dipper Delivery Right 
+s1,
+     #z6:   ON^dipper; z5; add p;set w(p)=^RdipON+T;
+               add q;Show 7, RDippers, q; --->s2
+s2,
+     5":    OFF^dipper;add p;set w(p)=^RDipOff+T; z9 --->s1 
+
+S.S.12, \ Reinf Retr right 
+s1, 
+	#z5: ---> s2 
+s2, 
+	#R^headIN: add s; show 10, RReinfRetr, s;
+	add p; set w(p)=^rretrievedright+T; ---> s3 
+s3, 
+	#z9: ---> s1 
+
+S.S.13, \ Reinf Retr left 
+s1, 
+	#z4: ---> s2 
+s2, 
+	#R^headIN: add c; show 9, LReinfRetr, c;
+	add p; set w(p)=^rretrievedleft+T; ---> s3 
+s3, 
+	#z9: ---> s1 
+    
+    
+S.S.8, \Session Duration Clock
+s1,
+    #start:--->s2
+s2,
+    1":    set k(0)=k(0)+.01; if k(0)>.59 [@AddMin, @NoAdd]
+            @AddMin: add k(1); set k(0)=0; set k(2)=k(0)+k(1);
+                 show 1, Session, k(2)--->s2
+            @NoAdd: set k(2)=k(0)+k(1); show 1, Session, k(2);--->s2
+
+S.S.10, \Trial Duration Clock  
+s1,
+    #start:--->s2
+s2,
+    #z12: set o(0)=0; set o(1)=0; set o(2)=0; show 3, Trial Duration, o(2); --->s3 
+s3, 
+    1": if v<2 [@continue, @waitfortrial] 
+   	    @continue: set o(0)=o(0)+.01; if o(0)>.59 [@AddMin, @NoAdd]
+            		@AddMin: add o(1); set o(0)=0; set o(2)=o(0)+o(1);
+                 		 show 3, Trial Duration, o(2); --->s3
+            		@NoAdd: set o(2)=o(0)+o(1); show 3, Trial Duration, o(2) ---> s3 
+	    @waitfortrial: set o(0)=o(0)+0; set o(1)=o(1)+0; set o(2)=o(2)+0 ---> s2
+
+
+S.S.15, \Mean latency sample lever to choice lever
+s1,
+    #z17: ---> s2
+
+s2,
+    1":  set o(4)=o(4)+.01; if o(4)>.59 [@AddMin, @NoAdd]
+	  @AddMin: add o(5); set o(4)=0; set o(6)=o(4)+o(5); show 36, Total L-L lat, o(6); ---> s2
+	  @NoAdd: set o(6)=o(4)+o(5); show 36, Total L-L lat, o(6); ---> s2
+    #z18: set o(7)=o(6)/(e(2)+e(3)+e(4)+e(5)); show 8, L-L latency, o(7) ---> s1
+    #z19: set o(6)=o(6)-.0526; show 36, Total L-L lat, o(6);
+	  if o(4)<.0526 [@o5, @o4]
+		@o5: set o(5)=o(5)-1; set o(4)=o(4)+.59-.0526; ---> s1
+		@o4: set o(4)=o(4)-.0526; ---> s1				
+
+
+S.S.16, \Mean latency second noseport to choice lever
+s1,
+    #z8: ---> s2
+
+s2,
+    1":  set o(8)=o(8)+.01; if o(8)>.59 [@AddMin, @NoAdd]
+	  @AddMin: add o(9); set o(8)=0; set o(10)=o(8)+o(9); show 37, Total N-L lat, o(10);---> s2
+	  @NoAdd: set o(10)=o(8)+o(9); show 37, Total N-L lat, o(10); ---> s2
+    #z18: set o(11)=o(10)/(e(2)+e(3)+e(4)+e(5)); show 13, N-L latency, o(11)---> s1
+
+
+
+	

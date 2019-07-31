@@ -1,0 +1,359 @@
+\                        C O M M E N T S
+\
+\ Progressive ratio schedule.  Mice begin on a FR2 and with each successive dipper the FR value increases by 2(x).
+\ starting with an FR value of 2.
+\ Mice begin with one randomly-selected lever, which remains out until there have been 3min without a lever press.  At
+\ that point the lever is retracted.  After a 10s wait the other lever is extended and the progressive ratio begins
+\ again from FR2. After 5min without a press that lever is retracted and the session ends.  There is a 60min maximum
+\ session length.
+\ The M array records the break point (the FR value that was not completed) for each lever:
+\ M(1) = left lever break point
+\ M(2) = right lever break point
+\ the FR value is stored in the "L" variable, which is incremented after each dipper in state 8 of s.s.3.  So, to change
+\ the increment size, go to that state and change the following statement "set l = l + 2".
+\
+\ modified 8/1/08 by KTaylor for progression to be +5 at each increment.
+
+\only save W, P variable to data file*******
+DISKFORMAT = 13.1
+DISKVARS = a, m,W    \"DISKVARS" only prints selected variables to datafile
+DISKCOLUMNS = 1
+
+                  \  Inputs ****************************
+^headIN = 4       \  IR head entry detector
+^LLever2 = 2       \  left lever press
+^RLever2 = 1       \  right lever press
+
+
+                  \  Outputs ****************************
+^leftlever = 8
+^rightlever = 7
+^dipper = 6        \ On Liquid Dipper
+^house = 1         \houselight
+
+    \CONSTANTS***********************
+^DipDuration = 5    \dipper up duration (sec)
+
+
+
+\  VARIABLES USED IN THIS PROGRAM
+\   (a) = head poke latency array; records latency to first headpoke after dipper up
+\   b = counter for a
+\   c = master timer (in seconds, with 1/10s resolution)
+\   d = dipper up timer
+\   e = "set e = " lever fi duration, 1sec = 100
+\   f =
+\   g = random lever to be used (On"g")
+\   h = list of levers to be drawn from
+\   i = list array of ITI durations
+\   j = total number of trials (peak and fi)
+\   k = within trial/iti counter
+\   l = progressive ratio value
+\   (m) = ARRAY of break points M(1) = left lever break, M(2) = right lever break
+\   n = # of levers extended
+\   o
+\   p = trial time counter
+\   q
+\   r = right lever record
+\   s = left lever record
+\   t
+\   u
+\   v
+\  (w) = time and event code for matlab
+\   x = ITI dur, selected from list i
+\   y
+\   z (reserved)
+
+
+\  \  SHOW POSITIONS
+\  1 = current FR value
+\  2 = Dipper Timer
+\  3 = dipper counter
+\  4 = Session Time (sec)
+\  5 = head entries
+\  6 =
+
+\======================================================
+\ MATLAB standardized codes
+\ *** = used in this program
+
+^Feed1 = 0021
+^Feed2 = 0022
+^Feed3 = 0023
+^Feed4 = 0024
+^DipOn = 0025   \***
+^DipOff = 0026   \***
+^LLeverOn = 0027 \***
+^RLeverOn= 0028  \***
+^LLeverOff = 0029 \***
+^RLeverOff = 0030 \***
+^LightOff1 = 0031
+^LightOff2 = 0032
+^LightOff3 = 0033
+^LightOff4 = 0034
+^LightOn1 = 0041
+^LightOn2 = 0042
+^LightOn3 = 0043
+^LightOn4 = 0044
+^ToneOff1 = 0051
+^ToneOff2 = 0052
+^ToneOff3 = 0053
+^ToneOff4 = 0054
+^ToneOn1 = 0061
+^ToneOn2 = 0062
+^ToneOn3 = 0063
+^ToneOn4 = 0064
+^WNoiseOff1 = 0071
+^WNoiseOff2 = 0072
+^WNoiseOff3 = 0073
+^WNoiseOff4 = 0074
+^WNoiseOn1 = 0081
+^WNoiseOn2 = 0082
+^WNoiseOn3 = 0083
+^WNoiseOn4 = 0084
+
+^StartTrial = 0111
+^EndTrial = 0112
+^StartSession = 0113  \***
+^EndSession = 0114   \***
+^HouseLightOff = 0115
+^HouseLightOn = 0116
+^OnFan = 0117\***
+^OffFan = 0118\***
+^StartIti = 0121
+^EndIti = 0122
+^LightOffStan = 0201
+^LightOnStan = 0202
+^LightOffComp = 0203
+^LightOnComp = 0204
+^LightOffCtrl = 0205
+^LightOnCtrl = 0206
+^FeedStan = 0207
+^FeedComp = 0208
+^StartStanFlash = 0209
+^StopStanFlash = 0211
+^StartCompFlash = 0212
+^StopCompFlash = 0213
+^STNonGapNonProbe = 0214
+^STNonGapProbe = 0215
+^STGapNonProbe = 0216
+^STGapProbe = 0217
+
+^ProbeTrial = 0221
+^AutoTrial = 0222
+
+^PokeOff1 = 1001
+^PokeOff2 = 1002
+^PokeOff3 = 1003
+^PokeOff4 = 1004
+^PokeOn1 = 1011
+^PokeOn2 = 1012
+^PokeOn3 = 1013
+^PokeOn4 = 1014
+^LLeverPress = 1015
+^RLeverPress = 1016
+^PokeOffStan = 1301
+^PokeOnStan = 1302
+^PokeOffComp = 1303
+^PokeOnComp = 1304
+^PokeOffCtrl = 1305
+^PokeOnCtrl = 1306
+
+^FeederLightOn = 0101  \***
+^FeederLightOff = 0102  \***
+
+\================================================================
+
+
+\Dimensionalize Event and Time code array
+dim a=1000
+dim w=20000
+dim m = 2
+
+
+\ITI duration list (in hundredths of seconds)
+list i = 140, 270, 720, 750, 1050, 1370, 1600, 2840, 3150, 3330, 3700, 3980, 5620, 5640, 6640, 7100, 9880, 10210, 10660, 10750
+list h = 2
+
+
+\===============================
+\   Z-PULSES USED IN THIS PROGRAM
+\ z1 = dipper up (initiate timer D)
+\ z2 = reset dipper timer
+\ z3 = 5min w/o press
+\ z4 = starting timing interresponse intervals
+\===============================
+
+
+
+
+s.s.1,  \MATLAB TIMER "T"
+
+s1,
+        0": SET p = -1; set b = -1; set n = 0;--->s2
+
+s2,
+        .02": SET T = T + 100000 --->sx  \Keeps time in 50th of a second
+
+
+S.S.2,    \INITIALIZE
+
+s1,
+
+           #start:~initANL926;~;~SetRack (MG, 2);~;
+        ~SetAmp (MG,BOX, 90);~;
+        ~SetRF (MG,BOX, 10);~;~SetFreq (MG,BOX, 2500);~;
+         ON^house; add p; set w(p)= ^HouseLightOn + T---> s2
+s2,
+
+       120':OFF^house;add p; set w(p) = ^HouseLightOff + T;
+            add p; set w(p)= ^EndSession + T;
+            add p; set w(p)=-987.987;
+            add b; set a(b)= -99;
+            add b; set a(b) = -987.987--->stopabortflush
+
+
+
+
+s.s.3,  \TRIAL AND ITI GENERATOR
+
+s1,
+        #start:add p; set w(p)= ^StartSession + T; set l=5--->s2
+s2,
+       .1":randd g = h; set n = n + 1; set x = 1000; set e = 000;
+          if n = 2 [@end, @noend]
+              @end:OFF^house;add p; set w(p) = ^HouseLightOff + T;
+                   add p; set w(p)= ^EndSession + T;
+                   add p; set w(p)=-987.987;
+                   add b; set a(b)= -99;
+                   add b; set a(b) = -987.987--->stopabortflush
+              @noend:--->s3 \change "e" here for different FI lever durations
+
+
+s3,
+
+        x#T:ON^rightlever;if g = 1 [@leftlever, @rightlever]
+                          @leftlever: add p; set w(p) = ^LLeverOn + T--->s4
+                          @rightlever: add p; set w(p) = ^RLeverOn + T--->s4
+
+
+
+
+s4,
+
+        e#T:z4--->s5
+
+
+
+
+s5,
+
+        l#R^LLever2: if g = 1 [@Lreward, @noLreward]
+                       @Lreward:z1;ON^dipper; add j; show 3, Dipper, j;
+                       add p; set w(p) = ^DipOn + T--->s6
+                       @noLreward:--->sx
+        l#R^RLever2: if g = 1[@noRreward, @Rreward]
+                      @noRreward:--->sx
+                      @Rreward: z1;ON^dipper; add j; show 3, Dipper, j;
+                       add p; set w(p) = ^DipOn + T--->s6
+
+        #z3:set m(g) = l;set l = 2; OFFg; if g = 1 [@leftlever, @rightlever]
+                          @leftlever: add p; set w(p) = ^LLeverOff + T--->s2
+                          @rightlever: add p; set w(p) = ^RLeverOff + T--->s2
+
+s6,
+
+        .5":~ondur(MG,BOX,200);~;--->s7
+
+s7,
+
+         4.5":z2;OFF^dipper;add p; set w(p) = ^DipOff + T--->s8
+
+s8,
+         .01":set l=l+5;show 4, FR, l--->s5
+
+
+
+S.S.4,  \Head Entry (Input 3) COUNTER
+
+S1,
+
+     #START:SHOW 5,HeadIn,v--->S2
+
+S2,
+
+      #R^headIN: add v; SHOW 5,HeadIn,v; add p; set w(p) = ^PokeOn1 + T---> s3
+
+
+S3,
+
+     #R^RLever2: ---> s2
+
+
+
+S.S.5, \Lever Press Record
+
+s1,
+      #start--->s2
+
+s2,
+
+      #R^LLever2:add s;show 2, LLever, s;
+                       add p; set w(p) = ^LLeverPress + T--->sx
+
+      #R^RLever2:add r; show 1, RLever, r;
+                          add p; set w(p) = ^RLeverPress + T--->sx
+
+
+
+s.s.6,  \MASTER TIMER
+
+s1,
+        #start:--->s2
+
+s2,
+        1': set c = c + 1; show 3, SessTime, c--->sx
+
+s.s.7,  \Dipper Up Timer (D variable)
+
+s1,
+
+      #z1: set d = 0--->s2
+
+s2,
+     0.1": set d = d + 0.1--->sx
+     #z2:--->s1
+
+
+s.s.8, \latency to first head poke after dipper up
+
+s1,
+
+    #z1:--->s2
+
+s2,
+
+    #R^headIN: set b = b + 1; set a(b) = d--->s1
+    #z2:--->s1
+
+
+s.s.9, \time interresponse intervals
+
+s1,
+
+   #z4:--->s2
+
+s2,
+
+   #R^RLever2: if g = 1 [@Lreward, @noLreward]
+               @Lreward:--->sx
+               @noLreward:--->s2
+
+   #R^LLever2: if g = 1 [@Lreward, @noLreward]
+               @Lreward:--->s2
+               @noLreward:--->sx
+
+   3':z3--->s1
+
+
+

@@ -1,0 +1,401 @@
+\VI program
+\Ward 10/09
+\Program delivers rewards on a VI schedule (schedule value set in macro)
+\7/6 Modified to present a two component multiple schedule during which rewards are delivered for lever presses
+\occurring in S+ and not in S-. Program stimuli can be switched for reversal tests.
+\8/18 Modified to include a variable 30 s blackout between components and to randomize presentation of components
+\modified 10/17/12 by KTaylor to accommodate level input for levers and to include time stamped event codes.
+
+
+\  Inputs ****************************
+^headIN = 4       \  IR head entry detector
+^LLever = 2       \  left lever press
+^RLever = 1       \  right lever press
+ 
+
+                  \  Outputs ****************************
+^leftlever = 8
+^rightlever = 7
+^fan = 12         \ Fans for Box ventilation  
+^dipper = 6        \ On Liquid Dipper
+^house = 1         \houselight
+
+\Variables used in program
+\a=array for recording
+\ a(1) = time in S+ VI
+\ a(2) = total responses in S+ VI
+\ a(3) = total number of components, session ends after 20 of each                                
+\ a(4) = total responses in S- VI                                                            
+\ a(5) = counterbalancing for S+ and S- stimuli (1=flashing HL for S+, 2=steady HL for S+)
+\ a(6) = component by component response totals for S+
+\ a(7) = component by component response totals for S-
+\ a(8) = component by component dippers in S+
+\ a(9) = time in S+ component. Switches after 1 minute but excludes dipper time
+\ a(10) = Discrimination Ratio
+\ a(11) = variable for time between presses in S-
+\ a(12) = flag for whether a response has been made in the last 20 s of S-. Set to 1 if not so can change to S+
+\ a(13) = time in S- VI
+\ a(14) = session timer
+\ a(15) = variable for S+ or S- component
+\ a(16) = lever presses during dipper
+\ a(17) = cumulative latency to first press in S+
+\ a(18) = cumulative latency to first press in S-
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+\ a(19) = VI value multiplier
+\ a(20) = blackout duration
+\ a(21) = number of rewards
+\ a(22) = current S+ VI value
+\ a(23) = hold current dipper latency
+\ a(24) = cumulative dipper latency
+
+\\\\\\a(25)=index for d array
+\\\\\\a(26)=index for f array
+\ b = list of S+ VI values
+\ c = array for trial by trial component info                                                                                          
+\ d = array for trial by trial S+ dipper latency
+\ e = array for component by component responses totals in S- for first minute 
+\ f = array for component by component response totals for S+ 
+\ g array to hold indexing counters for arrays
+\  g(1) index for e array (formerly g)
+\  g(2) index for h array (formerly j)
+\  g(3) index for k array (formerly l)
+\  g(4) index for c array (formerly n)
+\  g(5) index for p array (formerly q)
+\  g(6) index for s array (formerly t)
+\  g(7) index for v array (formerly w)
+\  g(8) index for x array (formerly y)
+\  g(9) index for w array (new index)
+\ h = array for component by component response totals for S-        
+\ i = set when S+ VI comp over, switches after current reward
+\ j = holder for lever press indicators
+\ k = array for component by component dippers for S+
+\ l =                                                                
+\ m = list for blackout duration
+\ n = Counter for s+/S- trials
+\ o = component by component latencies to first response in S+
+\ p = array for component by component latencies to first response in S+
+\ q =
+\ r = component by component latencies to first response in S-
+\ s = array for component by component latencies to first response in S-                                                                 
+\ t = timer for time stamped data array
+\ u = component by component time in S-
+\ v = array for component by component time in S-
+\ w = time stamped event codes
+\ x = realtime array
+  \ .1  = S+ component begins
+  \ .12 = S+ component ends                                                 
+  \ .2  = S- component begins
+  \ .22 = S- component ends                                 
+  \ .3  = lever press
+  \ .4  = dipper up                                            
+  \ .5  = dipper down
+                                                                           
+\ y= 
+\ z= list for S+ and S- components
+
+\======================================================
+\ MATLAB standardized codes
+\ *** = used in this program
+
+^Feed1 = 0021
+
+^DipOn = 0025   
+^DipOff = 0026
+   
+^LLeverOn = 0027 
+^RLeverOn= 0028  
+^LLeverOff = 0029 
+^RLeverOff = 0030
+
+^LightOff1 = 0031
+^LightOff2 = 0032
+^LightOff3 = 0033
+^LightOff4 = 0034
+^LightOn1 = 0041   
+^LightOn2 = 0042
+^LightOn3 = 0043
+^LightOn4 = 0044
+
+^SPlusTrialStart = 0051
+^SPlusTrialEnd = 0061    
+^SMinusTrialStart = 0071
+^SMinusTrialEnd = 0081
+
+^Flash = 0091
+^Steady = 0092
+
+^StartSession = 0113  
+^EndSession = 0114   
+^HouseLightOff = 0115
+^HouseLightOn = 0116
+^OnFan = 0117
+^OffFan = 0118
+^StartIti = 0121
+^EndIti = 0122
+
+^ProbeTrial = 0221
+^AutoTrial = 0222
+
+^PokeOff1 = 1001
+^PokeOn1 = 1011
+^LPressOn = 1015
+^RPressOn = 1016
+^LPressOff = 1017   
+^RPressOff = 1018
+
+^FeederLightOn = 0101  
+^FeederLightOff = 0102  
+
+\================================================================
+DISKFORMAT = 13
+DISKCOLUMNS = 1
+DISKVARS = A,C,D,E,F,H,K,P,S,V,W,X
+
+Dim a=26
+Dim c=40
+Dim d=100
+Dim e=20
+Dim f=20
+Dim h=20 
+dim g=20          
+dim j=6                                                               
+Dim k=20
+Dim p=20
+Dim s=20
+Dim v=20                                                                                     
+Dim w=50000
+Dim x=50000
+
+
+List b=0.1",0.2",0.3",0.4",0.5",0.6",0.7",0.8",1",1.2",1.5",1.8",2.3",3.7"      
+List m=9.7",11.8",14.1",16.6",19.3",22.3",25.7",29.4",33.7",38.8",44.8",52.4",62.6",78.3",119.9"
+List z=1,1,2,2   
+
+
+s.s.1, \selects first component                                                                   
+s1,                                                                                                             
+	#start:	on^fan; add g(9); set w(g(9))= ^OnFan+T;
+        	on^leftlever; add g(9); set w(g(9))=^LLeverOn+T;
+        	add g(9); set w(g(9))= ^StartSession+T;set a(5)= 2;
+        	~initANL926;~;~SetRack (MG, 2);~;              
+            	~SetAmp (MG,BOX, 90);~;                                                              
+            	~SetRF (MG,BOX, 10);~;~SetFreq (MG,BOX, 2500);~; ---> s2
+
+s2,
+	.01":	set a(19)=20; randd a(15)=z; if a(15)=1 [@S+, @S-]
+                    @S+: z3;set n=n+1; show 4,S+/S-,n ---> s1
+                    @S-: z4;set n=n+.01; show 4,S+/S-,n ---> s1
+
+s.s.2, \S+ VI component
+s1,                                                              
+    	#z3:	set a(6)=0; set a(8)=0; set c(g(4))=1; add g(4); 
+		set x(g(8))=a(14)+.1; add g(8);
+		add g(9); set w(g(9))=^SPlusTrialStart+T---> s2
+
+s2,                                                                                                              
+	0.1":	randd a(22)=b; set a(22)=(a(22)*a(19)); if a(5)=1 [@flashing, @steady]               
+		  @flashing:  z5; add g(9); set w(g(9))=^Flash+T ---> s3
+		  @steady:  on^house; add g(9); set w(g(9))= ^Steady+T; ---> s3
+	#z10:	off^house; add g(9); set w(g(9))=^SPlusTrialEnd+T ---> s1
+
+s3,
+	a(22)#t:---> s4
+	#z7:	add a(2); add a(6); show 1, S+ resp, a(2); z12; set x(g(8))=a(14)+.3; add g(8) ---> sx
+	#z10:	off^house; add g(9); set w(g(9))=^SPlusTrialEnd+T ---> s1
+                                                                          
+s4,
+	#z7:	add a(2); add a(6); show 1, S+ resp, a(2); z1; z12; 
+		on^dipper; add g(9); set w(g(9))= ^DipOn+T;
+		add g(9); set w(g(9))= T;
+		add a(8); set x(g(8))=a(14)+.3; add g(8); set x(g(8))=a(14)+.4; add g(8) ---> s5
+	#z10:	off^house;add g(9); set w(g(9))=^SPlusTrialEnd+T;
+		Off^dipper;add g(9); set w(g(9))= ^DipOff+T;
+		add g(9); set w(g(9))= T;---> s1         
+s5,
+	.5":	~SetFreq (MG,BOX, 2500);~;~ondur(MG,BOX,200);~; ---> s6                                                                                          
+s6,
+	5.5":	off^dipper; add g(9); set w(g(9))= ^DipOff+T;
+		add g(9); set w(g(9))= T;
+		set x(g(8))=a(14)+.5; add g(8); add a(21); show 3, Rewards, a(21); z2; 
+		if i=1 [@switch, @no]
+		  @switch: add a(3); if a(3)=40 [@end, @keepgoing]
+			@end: ---> s7
+			@keepgoing: z11; set x(g(8))=a(14)+.12; add g(8); 
+				add g(9); set w(g(9))=^SPlusTrialEnd+T---> s1               
+		  @no: ---> s2
+	#z7:	add a(16); set x(g(8))=a(14)+.3; add g(8) ---> sx
+s7,
+	0":	off^leftlever; add g(9); set w(g(9))=^LLeverOff+T;
+        	OFF^fan;add g(9); set w(g(9))=^OffFan+T;
+        	add g(9); set w(g(9))= ^EndSession + T;
+        	add g(9); set w(g(9))=-987.987;
+		set x(g(8))=-987.987 --->stopabortflush
+                                                             
+s.s.3, \\time in S+ VI, stops recording during dipper presentations
+s1,
+	#z1:	---> s2
+s2,                                       
+	.01":	add a(1) ---> sx                                        
+	#z1:	---> s3          
+s3,                                                                                                    
+	#z2:	---> s2
+
+s.s.4, \\keeps track of time in S+ VI component, switches after 1 min (excluding dipper time)
+s1,
+	#z3:	set i=0; set a(9)=0 ---> s2
+s2,
+	1":	add a(9); if a(9)<60 [@go, @switch]
+		  @go: ---> s2
+		  @switch: add a(3); if a(3)=40 [@end, @keepgoing]
+			@end: set f(a(26))=a(6);add a(26)---> s4
+			@keepgoing: z10; set f(a(26))=a(6);add a(26); add g(1); set i=1; 
+				set k(g(3))=a(8); add g(3); z11 ---> s1
+	#z1:	---> s3
+s3,
+	#z2:	---> s2
+s4,
+	0":	off^leftlever; add g(9); set w(g(9))=^LLeverOff+T;
+        	OFF^fan;add g(9); set w(g(9))=^OffFan+T;
+        	add g(9); set w(g(9))= ^EndSession + T;
+        	add g(9); set w(g(9))=-987.987;
+		set x(g(8))=-987.987 --->stopabortflush 
+
+
+s.s.5, \\\S- VI component
+s1,
+	#z4:	set a(7)=0; set c(g(4))=2; add c(4); set x(g(8))=a(14)+.2; add g(8); 
+		add g(9); set w(g(9))=^SMinusTrialStart+T---> s2
+s2,
+	0.1":	if a(5)=1 [@steady, @flashing]
+		  @steady: on^house; add g(9); set w(g(9))= ^Steady+T; ---> s3
+		  @flashing: z5; add g(9); set w(g(9))= ^Flash+T; ---> s3
+s3,	
+	59":	z14 ---> s4
+	#z7:	add a(4); add a(7); show 2, S- resp, a(4); z13; set x(g(8))=a(14)+.3; add g(8) ---> sx 
+s4,
+	1": 	if a(12)=1 [@go, @no]
+		  @go: add a(3); if a(3)=40 [@end, @keepgoing]
+			@end: ---> s5
+			@keepgoing: z10; off ^house; set h(g(2))=a(7); add g(2); z11; 
+				set x(g(8))=a(14)+.22; add g(8);
+				add g(9); set w(g(9))=^SMinusTrialStart+T---> s1
+		  @no: ---> sx
+	#z7:	add a(4), a(7); show 2, S- resp, a(4); set x(g(8))=a(14)+.3; add g(8) ---> sx
+s5,
+	0":	off^leftlever; add g(9); set w(g(9))=^LLeverOff+T;
+        	OFF^fan;add g(9); set w(g(9))=^OffFan+T;
+        	add g(9); set w(g(9))= ^EndSession + T;
+        	add g(9); set w(g(9))=-987.987;
+		set x(g(8))=-987.987 --->stopabortflush 
+
+
+s.s.6, \\\flashing HL control for component stimulus
+s1,
+	#z5:	on^house ---> s2
+s2,                                                                                   
+	.5":	off^house ---> s3
+	#z10:	off^house ---> s1
+s3,
+	.5":	on^house ---> s2
+	#z10:	off^house ---> s1
+
+s.s.7, \\session timer
+s1,
+	#start:	---> s2
+s2,
+	1":	add a(14); show 5, SessionTime, a(14) ---> sx
+
+s.s.8 \keeps track of the time between responses during S-
+s1,
+	#z4:	set a(11)=0; set a(12)=0 ---> s2
+s2,
+	40":	---> s3
+s3,
+	1":	add a(11); if a(11)<20 [@no, @yes]
+		  @no: ---> sx
+		  @yes: set a(12)=1 ---> s1       
+	#z7:	set a(11)=0 ---> sx 
+                                                                                      
+s.s.9, \\\records time in S-
+s1,
+	#z4: ---> s2
+s2,
+	.01":	add a(13); add u ---> sx
+	#z11:	set v(g(7))=u; add g(7); set u=0 ---> s1
+
+s.s.10, \\\blackout between components                                                                               
+s1,
+	#z11:	off ^house; add g(9); set w(g(9))=^StartITI+T; randd a(20)=m ---> s2
+s2,
+	a(20)#t:add g(9); set w(g(9))=^EndITI+T;
+		randd a(15)=z; if a(15)=1 [@S+, @S-]                          
+		  @S+: z3; set n=n+1; show 4,S+/S-,n ---> s1
+		  @S-: z4; set n=n+.01; show 4,S+/S-,n ---> s1
+                    
+s.s.11, \\\component by component latencies to first press in S+
+s1,
+	#z3:	---> s2
+s2,
+	.01":	add o ---> sx
+	#z12 ! #z11:	set p(g(5))=o; add g(5); set a(17)=(a(17)+o); set o=0 ---> s1
+
+s.s.12, \\\component by component latencies to first press in S-
+s1,
+	#z4:	---> s2
+s2,
+	.01":	add r ---> sx
+	#z13 ! #z11:	set s(g(6))=r; add g(6); set a(18)=(a(18)+r); set r=0 ---> s1
+
+s.s.13, \\\component by component dipper latencies
+s1,
+	#z1:	---> s2
+s2,
+	#R^headIN:	set d(a(25))=a(23); add a(25); set a(24)=(a(24)+a(23)); set a(23)=0 ---> s1
+	#z2:	set d(a(25))=0; add a(25); set a(23)=0 ---> s1
+	.01":	add a(23) ---> sx
+
+s.s.14, \\\component by component response totals in S- in first minute 
+s1,
+	#z14:	---> s2
+s2,
+	1':	set e(g(1))=a(7); add g(1) ---> s1 
+
+S.S.15,  \Bar Press Detector - Left Lever       
+s1,
+	#Start:	--->s2
+s2,
+	.05":	if j(0) > 0 [@press, @nopress]
+		@press: if j(2) = 0 [@leveron, @noleveron]
+			@leveron: z7;  add g(9); set w(g(9))= ^LPressOn+T;
+				  set j(2) = 1; set j(0) = 0; --->s2
+			@noleveron: set j(2) = 1; set j(0) = 0--->s2
+		@nopress: if j(2) = 1 [@stop, @nostop]     
+			@stop:  add g(9); set w(g(9))= ^LPressOff+T; 
+				set j(2) = j(0); set j(0) = 0; --->s2
+			@nostop:set j(2) = j(0); set j(0) = 0; --->s2               
+	#R^LLever: set j(0)=j(0)+1; --->sx        
+                                                 
+S.S.16,  \Bar Press Detector - Right Lever         
+s1,                        
+	#Start:	--->s2          
+s2,
+	.05": if j(1) > 0 [@press, @nopress]     
+		@press: if j(3) = 0 [@leveron, @noleveron]
+			@leveron: z8; add g(9); set w(g(9))=^RPressOn+T; 
+				 set j(3) = 1; set j(1) = 0; --->s2
+			@noleveron: set j(3) = 1; set j(1) = 0--->s2
+		@nopress: if j(3) = 1 [@stop, @nostop]
+			@stop:	add g(9); set w(g(9))=^RPressOff+T;                    
+				set j(3) = j(1); set j(1) = 0; --->s2     
+			@nostop: set j(3) = j(1); set j(1) = 0; --->s2 
+        #R^RLever: set j(1)=j(1)+1; --->sx
+
+S.S.18,
+s1,
+	#R^headIN: add g(9); set w(g(9))=^PokeOn1+T--->sx
+        	             
+s.s.17,  \Time stamped data arraty timer
+s1,     
+	0":	Set g(9) = -1; --->s2
+s2,    
+	.01":	Set T=T+100000 --->sx \Keeps time in 100th of a second         

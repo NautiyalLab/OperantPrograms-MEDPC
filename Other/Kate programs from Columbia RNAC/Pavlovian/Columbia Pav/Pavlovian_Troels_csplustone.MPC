@@ -1,0 +1,275 @@
+\
+\ ******************************************************************
+\
+\
+\                        C O M M E N T S
+\
+\ Sign vs. Goal Tracking
+\ C Mezias/KTaylor 4/30/2013
+
+\cs+ tone
+\cs- white noise
+
+
+
+\  CONSTANTS USED IN THIS PROGRAM
+\  Inputs ****************************
+^LLev = 1       \  left lever press
+^RLev = 2       \  right lever press
+^headIN = 3       \  IR head entry detector
+^headOUT = 4      \ IR head exit detector
+
+
+
+                  \  Outputs ****************************
+^LLever = 1
+^RLever = 2
+^Dipper = 6        \ On Liquid Dipper
+^RedLightLeft = 4      \stimulus lights above Left Lever
+^YellowLightLeft = 5
+^GreenLightLeft = 10
+^House = 7         \houselight
+^FeederLight = 8   \ Light in the Head Entry Hole; Signal being used in this exp.
+^RedLightRight = 13     \stimulus lights above Right Lever
+^YellowLightRight = 15
+^GreenLightRight = 11
+^Fan = 12         \ Fans for Box ventilation
+^Pellet = 14
+
+^trigger = 9
+^triglight = 10 \Take a separate houselight outside of the box to use as a "trigger ON/OFF" indicator
+
+
+\  VARIABLES USED IN THIS PROGRAM
+\   a = holder for lever press start
+\   b = holder for lever press end
+\   c =
+\   d = holder for ITI duration
+\   e =
+\   f =
+\   g = list for ITI durations
+\   h =
+\   i = trial indicator (1=trial, 0=ITI)
+\   j =
+\   k = session timer (sec)
+\   l =
+\   m =
+\   n = Trial Counter
+\   o = head entry holder
+\   p = event counter for w array
+\   q =
+\   r = press counter
+\   s = trial counter
+\   t = counter for data array timer
+\   u = ITI head pokes
+\   v = Trial head pokes
+\  (w) = Matlab Event code array
+\   y =
+
+
+\  SHOW POSITIONS
+\  1 = master timer
+\  2 = # Left Lever Presses
+\  3 = # Right Lever Presses
+\  4 = # Pellets
+\  5 = # Dippers
+
+\   Z-PULSES USED IN THIS PROGRAM
+
+\   z1 = start new trial
+\   z2 = End program
+\   z3 = Lever Press
+
+
+
+\======================================================
+\ MATLAB standardized codes
+\ *** = used in this program
+
+^PelletDrop = 0022
+^DipOn = 0025
+^DipOff = 0026
+
+^LLeverOn = 0027
+^RLeverOn= 0028
+^LLeverOff = 0029
+^RLeverOff = 0030
+
+^LightOffRed = 0031
+^LightOffWhite = 0032
+^LightOffGreen = 0033
+^LightOffHouse = 0034
+^LightOnRed = 0041
+^LightOnWhite = 0042
+^LightOnGreen = 0043
+^LightOnHouse = 0044
+
+^CSPlusOn = 0101
+^CSPlusOff = 0102
+
+^CSMinusOn = 0103
+^CSMinusOff = 0104
+
+^ToneOff = 0062
+^ToneOn = 0061
+
+^WNoiseOn = 0071
+^WNoiseOff = 0072
+^ClickerOn = 0081
+^ClickerOff = 0082
+
+^StartTrial = 0111
+^EndTrial = 0112
+^StartSession = 0113
+^EndSession = 0114
+^HouseLightOff = 0115
+^HouseLightOn = 0116
+^OnFan = 0117
+^OffFan = 0118
+
+^StartIti = 0121
+^EndIti = 0122
+
+^PelletTrial = 0221
+^DipperTrial = 0222
+
+^HeadExit = 1001
+^HeadEntry = 1011
+^LLeverPressOn = 1015
+^LLeverPressOff=1017
+^RLeverPressOn = 1016
+^RLeverPressOff = 1018
+
+
+^Ontrigger= 4491
+^Offtrigger= 4492
+
+^Ontriglight = 4493
+^Offtriglight = 4494
+
+\================================================================
+
+
+\ w array is used for matlab codes
+
+DISKFORMAT = 15
+DISKVARS = W,R,U,V
+DISKCOLUMNS = 1
+
+dim w=100000
+dim k=6  \array for the session timer
+dim a=2  \lever press holder
+dim b=2  \lever off holder
+
+
+\ITI durations
+\mean = 85 s (exponential) + 15 s ITI
+list g = 1603, 1743, 2083, 2267,2382, 2592, 2741, 3281, 3564, 3869, 4924, 4943, 5111,
+     5858, 6455, 7659, 8198, 8934, 9147, 9528, 13397, 14897, 17689, 23858
+\list g = 500
+
+\ cs+, cs-, 1: cs+, 2: cs-
+list l = 1, 2, 1, 2, 1, 2
+
+S.S.1,  \MATLAB TIMER "T"
+s1,
+    #start: SET p = -1; --->s2
+s2,
+    .01": SET T = T + 100000--->sx
+
+S.S.2,    \Session Start Stop Controller
+s1,
+        #start: ~initANL926;~;
+                ~SetAmp (MG,BOX, 85);~;
+                ~SetRF (MG,BOX, 10);~;~SetFreq (MG,BOX, 2500);~;--->s2
+
+s2,
+    0":    add p;set w(p)=^StartSession+T;
+           ON^Fan; add p;set w(p)=^OnFan+T;
+           ON^house; add p;set w(p)=^LightOnHouse+T; z1;
+           ON^triglight; add p; set w(p)= ^Ontriglight + T;
+           ON^trigger; add p; set w(p)= ^ontrigger + T ---> s3
+s3,
+    10': OFF^trigger; add p; set w(p) = ^OFFtrigger+T;
+        OFF^triglight; add p; set w(p) = ^OFFtriglight+T---> s4
+
+s4,
+    10': ON^triglight; add p; set w(p)= ^Ontriglight + T;
+         ON^trigger; add p; set w(p)= ^ontrigger + T; ---> s5
+s5,
+    10': OFF^trigger; add p; set w(p) = ^OFFtrigger+T;
+        OFF^triglight; add p; set w(p) = ^OFFtriglight+T---> s6
+s6,
+    #z2:    ---> s7
+    50':    ---> s7
+s7,
+    0':    off^Fan;    add p;set w(p)=^OffFan+T;
+        Off^House;  add p;set w(p)=^LightOffHouse+T;
+         add p;set w(p)=^EndSession+T;
+        add p;set w(p)=-987.987; ---> stopabortflush
+
+
+
+S.S.3, \Trial Controller
+s1,
+    #z1:    add n; show 2, Trial, n; add p;set w(p) = ^StartTrial + T;
+        randd d=g; randd e = l; add p;set w(p)=^StartIti+T; ---> s2
+s2,
+    d#T:    add p;set w(p)=^EndIti+T; --->s3
+s3,
+    0":     if e = 1 [@csplus, @csminus]
+             @csplus: add p; set w(p) = ^CSPlusOn + T;
+                              ~SetFreq (MG,BOX, 2500);~; ~ToneOn(MG,Box);~; add p; set w(p)=^ToneOn+T; ---> s4
+             @csminus: add p; set w(p) = ^CSMinusOn + T;
+                          ~OnFreq(MG,Box, 0);~; ~ToneOn(MG,Box);~; add p;set w(p)=^WNoiseOn + T ---> s4
+
+s4,
+    10":   ~ToneOff (MG, BOX);~;
+       if e = 1 [@csplus, @csminus]
+             @csplus: add p; set w(p)=^ToneOff+T; add p; set w(p) = ^CSPlusOff + T;
+                               ON^Dipper; add p; set w(p) = ^DipOn + T; ---> s5
+             @csminus: add p;set w(p)=^WNoiseOff + T; add p; set w(p) = ^CSMinusOff + T; ---> s6
+
+s5,
+    5":    Off^Dipper; add p; set w(p)=^DipOff+T; ---> s6
+
+s6,
+    0":   add p; set w(p) = ^EndTrial + T;
+          if n = 24 [@end, @more]
+            @end: z2 ---> s1
+            @more: z1  --->s1
+
+
+S.S.4,  \Head Entry Detector
+s1,
+     #start:--->s2
+S2,
+     #R^headIN:   add p;set w(p)=^HeadEntry+T;
+          if i=0 [@ITICount, @other]
+            @ITICount: add u; show 4, ITI HE, u; --->s2
+            @other: if i=1 [@Trial, @nothing]
+                @Trial: add v; show 5, Trial HE, v; --->s2
+                @nothing: --->s2
+     #R^headOUT:  add p;set w(p)=^HeadExit+T--->s2
+
+s.s.5 \Session Duration Clock
+s1,
+     #start:--->s2
+s2,
+     1":  set k(0)=k(0)+.01; if k(0)>.59 [@AddMin, @NoAdd]
+            @AddMin: add k(1); set k(0)=0;
+                 set k(2)=k(0)+k(1);show 1, Session, k(2) --->s2
+            @NoAdd:  set k(2)=k(0)+k(1);show 1, Session, k(2)--->s2
+\
+\S.S.6 \trigger on off
+\s1,
+\    #START: ---> s2
+\
+\s2,
+\    ON^triglight; add p; set w(p)= ^Ontriglight + T;
+\        ON^trigger; add p; set w(p)= ^ontrigger + T ---> s3
+\
+\s3,
+\    5': OFF^trigger; add p; set w(p) = ^OFFtrigger+T;
+\        OFF^triglight; add p; set w(p) = ^OFFtriglight+T---> sx
+\

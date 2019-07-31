@@ -1,0 +1,330 @@
+\                                             C O M M E N T S
+\
+\ Temporal Bisection Training Program
+\     Cue 1=Oscillating RGY Lights above Left Lever
+\     Cue 2=Solid Red-Green-Yellow Lights above Right Lever
+\     Time 1=6s
+\     Time 2=24s
+\
+\     Time 1-Cue 1 are paired, Time 2-Cue 2
+\
+\     Both Levers are presented after randomly selected time presentation.
+\     Cue 1, 2 are present
+\
+\     Levers Remain out until pressed (reinforced) or 5 sec Limited Hold.
+\     40 Trials Total, Var ITI (mean 45s, min 5s) or 70 min
+\
+\
+\ Olga Lipatova 9/25/06; revised 02/27/14 by Kathleen Taylor
+
+\only save W variable to data file
+
+DISKFORMAT=13
+DISKVARS=W    \"DISKVARS" only prints selected variables to datafile
+
+                  \  Inputs ****************************
+^headIN=3       \  IR head entry detector
+^headOUT=4      \ IR head exit detector
+^LLev=1         \  left lever press
+^RLev=2         \  right lever press
+
+
+                  \  Outputs ****************************
+^leftlever=1
+^rightlever=2
+^fan=6         \ Fans for Box ventilation
+^dipper=3        \ On Liquid Dipper
+^house=7         \houselight
+
+
+            \CONSTANTS***********************
+^DipDuration=5    \dipper up duration (sec)
+
+
+
+\  VARIABLES USED IN THIS PROGRAM
+\   a=Lever and HE array holders
+\   b=lever and HE array holders
+\   c=list for lever tial type
+\   d=holder for array c selection
+\   e=trial type (time)
+\   f=cue duration holder
+\   g=
+\   h=lever selection list
+\   i=list of ITI durations
+\   j=total number of trials
+\   k=array for session timer
+\   l=correct response, incorrect response (correction trial)
+\   m=
+\   n=left lever responses
+\   o=right lever responses
+\   p=trial time counter
+\   q
+\   r=session length limit
+\   s=lever record
+\   t =
+\   u =
+\   v =
+\  (w)=time and event code for matlab
+\   x=ITI duration holder
+\   y =
+\   z =
+
+
+\  \  SHOW POSITIONS
+\  1=Session clock
+\  2=
+\  3=
+\  4=
+\  5=
+
+\======================================================
+\ MATLAB standardized codes
+\ ***=used in this program
+
+^DipOn=0025
+^DipOff=0026
+^LLeverOn=0027
+^RLeverOn= 0028
+^LLeverOff=0029
+^RLeverOff=0030
+
+^LightOff1=0031
+^LightOff2=0032
+^LightOn1=0041
+^LightOn2=0042
+
+^ToneOff1=0051
+^ToneOff2=0052
+^ToneOn1=0061
+^ToneOn2=0062
+
+^StartTrial=0111
+^EndTrial=0112
+^StartSession=0113
+^EndSession=0114
+^HouseLightOff=0115
+^HouseLightOn=0116
+^OnFan=0117
+^OffFan=0118
+^StartIti=0121
+^EndIti=0122
+
+^PokeOff1=1001
+^PokeOn1=1011
+
+^LPressOn = 1015
+^RPressOn = 1016
+^LPressOff = 1017
+^RPressOff = 1018
+
+^FeederLightOn=0101
+^FeederLightOff=0102
+^LLeverCorrect=1307
+^RLeverCorrect=1308
+\================================================================
+
+\Dimensionalize Event and Time code array
+dim w=30000
+dim a=3
+dim b=3
+dim k=5
+
+\ITI duration list (in hundredths of seconds)
+list i=274, 394, 693, 720, 789, 1156, 1175, 1256, 1481, 1881,
+     2141, 2174, 2194, 2520, 2721, 2930, 3013, 3084, 3329, 3446,
+     3579, 3693, 4333, 5074, 5210, 5230, 5421, 5678, 5764, 6097,
+     6282, 6931, 6962, 7265, 7898, 8911, 9370, 10067, 14346, 14813
+
+\list i = 500
+
+\Cue duration list 1-short, 2=long
+list e=2
+
+\Lever List 1=one lever, 2=both levers
+list c=1
+
+\===============================
+\   Z-PULSES USED IN THIS PROGRAM
+\ z1=dipper up (initiate timer D)
+\ z2=reset dipper timer
+\ z3=limit left lever #
+\ z4=limit right lever #
+\===============================
+
+S.S.1,  \TIMER "T"
+s1,
+        0": SET p=-1; --->s2
+s2,
+        .01": SET T=T + 100000--->sx
+\================================================================
+S.S.2,    \INITIALIZE
+s1,
+    #start:    ~initANL926;~;~SetRack (MG, 2);~; ~SetAmp (MG,BOX, 90);~;
+             ~SetRF (MG,BOX, 10);~;~SetFreq (MG,BOX, 2500);~;
+             ON^fan; add p; set w(p)= ^OnFan+T;--->s1
+\================================================================
+s.s.3,  \TRIAL AND ITI GENERATOR
+s1,
+        #start:    add p; set w(p)= ^StartSession+T;
+        randd x=i; randd f=e; randd d=c; set l=1;
+        add p; set w(p)= ^StartITI+T;--->s2
+s2,
+    x#T:    if f=1 [@short-time, @long-time]
+                     @shortime: ~ondur(MG,BOX,2000);~;add p; set w(p)=^ToneOn1+T;--->s3
+                     @longtime: ~ondur(MG,BOX,8000);~;add p; set w(p)=^ToneOn2+T;--->s4
+s3,\Right lever out
+    2":    if d=1 [@1Lev, @2Lev]
+            @1Lev: ON^rightlever;add p; set w(p)=^RLeverON+T;--->s5
+            @2Lev: ON^leftlever; add p;set w(p)=^LLeverOn+T;
+            ON^rightlever;add p; set w(p)=^RLeverON+T; --->s7
+s4,\Left Lever Out
+    8":    if d=1 [@1Lev, @2Lev]
+            @1Lev:ON^leftlever;add p;set w(p)=^LLeverOn+T;--->s6
+            @2Lev:ON^leftlever;add p;set w(p)=^LLeverOn+T;
+                ON^rightlever;add p; set w(p)=^RLeverON+T; --->s8
+s5,\right lever trial end
+    10":        OFF^RightLever; add p; set w(p)=^RLeverOff+T;
+            add p; set w(p)=^LightOff1+T;--->s13
+    #R^RLev:    ON^dipper; add j; show 3, Dipper, j;
+            add p; set w(p)=^DipOn+T;--->s9
+s6,\left lever end
+    10":        OFF^LeftLever; add p; set w(p)=^LLeverOff+T;--->s13
+    #R^LLev:    ON^dipper; add p; set w(p)=^DipOn+T;
+            add j; show 3, Dipper, j;--->s9
+s7,
+         10":    set l=2;
+        OFF^LeftLever; add p; set w(p)=^LLeverOff+T;
+        OFF^RightLever; add p; set w(p)=^RLeverOff+T;--->s13
+       #R^LLev:    set l=1;
+        ON^dipper; add j; show 3, Dipper, j;
+        add p; set w(p)=^DipOn+T;--->s9
+       #R^RLev:    set l=2;--->s12
+s8,
+        10":    set l=2;OFF^LeftLever; add p; set w(p)=^LLeverOff+T;
+        OFF^RightLever; add p; set w(p)=^RLeverOff+T;--->s13
+       #R^RLev:    set l=1;
+        ON^dipper; add j; show 3, Dipper, j;
+        add p; set w(p)=^DipOn+T;--->s9
+       #R^LLev:    set l=2--->s12
+
+s9,
+    0": if d=1 [@one, @two]
+        @one: if f=1 [@short, @long]
+                     @short: OFF^RightLever;add p; set w(p)=^RLeverOff+T --->s11
+                     @long: OFF^LeftLever;add p; set w(p)=^LLeverOff+T --->s11
+        @two: OFF^RightLever;add p; set w(p)=^RLeverOff+T;
+            OFF^LeftLever;add p; set w(p)=^LLeverOff+T;--->s11
+s11,
+    5":    OFF^dipper;add p; set w(p)=^DipOff+T;--->s13
+s13,
+    0":       If j=40 [@end, @noend]
+                    @end:--->s15
+                    @noend:--->s14
+s14,
+    0":      If r=2 [@end, @noend]
+                    @end:--->s15
+                    @noend:--->s16
+s15,
+    .1":    OFF^fan;add p; set w(p)=^OffFan+T;
+        add p; set w(p)= ^EndSession+T;
+        add p; set w(p)=-987.987; --->stopabortflush
+s16,
+    0":    If l=1 [@startnew, @correctionTrial]
+            @startnew:randd x=i; randd f=e; randd d=c; set l=1;
+                          ~SetAmp (MG,BOX, 90);~;~SetRF (MG,BOX, 10);~;
+                           ~SetFreq (MG,BOX, 2500);~;--->s2
+                     @correctionTrial:randd x=i;set l=1;
+                ~SetAmp (MG,BOX, 90);~; ~SetRF (MG,BOX, 10);~;
+                                ~SetFreq (MG,BOX, 2500);~;--->s17
+s17,
+      0":  ON^house; add p; set w(p)= ^HouseLightOn+T; --->s18
+s18,
+      1': OFF^house; add p; set w(p)=^HouseLightOff+T;  --->s2
+\================================================================
+
+S.S.4,  \Head Entry (Input 3) COUNTER
+s1,
+    #START:SHOW 5,HeadIn,0--->S2
+s2,
+    #R^headIN: add p; set w(p)=^PokeOn1+T---> sx
+    #R^headOUT: add p; set w(p)=^PokeOff1+T--->sx
+
+\S.S.4  \Alternate HE recorder
+\s1,
+\    #start: --->s2
+\s2,
+\       .1":    if a(2) > 0 [@HE, @noHE]
+\            @HE: if b(2)=0 [@HEon, @noHEon]
+\                @HEon:    set b(2)=1; set a(2)=0;
+\                    add p;set w(p)=^PokeOn1+T --->s2
+\                @noHEon: set b(2)=1; set a(2)=0--->s2
+\            @noHE:    if b(2)=1 [@stop, @nostop]
+\                @stop:    set b(2)=a(2); set a(2)=0;
+\                    add p;set w(p)=^PokeOff1+T--->s2
+\                @nostop:set b(2)=a(2); set a(2)=0--->s2
+\        #R^headIN: set a(2)=a(2)+1--->sx
+\================================================================
+
+S.S.5,  \Bar Press Detector - Left Lever
+s1,
+    #Start: --->s2
+s2,
+       .05":     if a(0) > 0 [@press, @nopress]
+                @press: if b(0)=0 [@LevOn, @NotOn]
+                           @LevOn: add p; set w(p)=^LPressOn+T;
+                               add u; show 2, LeftPr,u;
+                               set b(0)=1; set a(0)=0;
+                               if s=1 [@reinf, @not]
+                                  @reinf: z6 --->s2
+                                  @not: --->s2
+                            @NotOn: set b(0)=1; set a(0)=0--->s2
+        @nopress: if b(0)=1 [@stop, @not]
+                           @Stop: add p;set w(p)=^LPressOff+T;
+                              set b(0)=a(0); set a(0)=0; --->s2
+                            @Not:    set b(0)=a(0); set a(0)=0; --->s2
+        #R^LLev: set a(0)=a(0)+1; --->sx
+\================================================================
+
+S.S.6,  \Bar Press Detector - RightLever
+s1,
+    #Start: --->s2
+s2,
+       .05":     if a(1) > 0 [@press, @nopress]
+            @press: if b(1)=0 [@levon, @noton]
+                           @levon:    add p; set w(p)=^RPressOn+T;
+                    add v; show 4, RightPr,v;
+                    set b(1)=1; set a(1)=0;
+                    if s=1 [@reinf, @not]
+                        @reinf: z6 --->s2
+                        @not: --->s2
+                            @noton: set b(1)=1; set a(1)=0--->s2
+                @nopress: if b(1)=1 [@stop, @not]
+                           @stop:    add p;set w(p)= ^RPressOff+T;
+                    set b(1)=a(1); set a(1)=0; --->s2
+                        @not:    set b(1)=a(1); set a(1)=0; --->s2
+    #R^RLev: set a(1)=a(1)+1; --->sx
+
+\================================================================
+
+S.S.7,  \Session Duration Clock
+s1,
+    #start:--->s2
+s2,
+    1":    set k(0)=k(0)+.01; if k(0)>.59 [@AddMin, @NoAdd]
+            @AddMin: add k(1); set k(0)=0; set k(2)=k(0)+k(1);
+                          show 1, Session, k(2)--->s2
+            @NoAdd:     set k(2)=k(0)+k(1); show 1, Session, k(2)--->s2
+\================================================================
+
+S.S.8,    \session length limit
+s1,
+    #start:    set r=1--->s2
+s2,
+    70':     set r=2--->s2
+
+
+
+
+
+

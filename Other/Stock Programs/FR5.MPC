@@ -1,0 +1,162 @@
+\ Copyright (C) 2010 MED Associates, All rights reserved.
+
+\ FR5.mpc  Source Program for MED-PC Illustrations
+
+
+\ Constants Used in this Program
+\ Compare the configurations below with the wiring chart supplied
+\ with all system orders.  Edit Input and Output #'s if different
+\ for your system or contact MED Associates for assistance.
+
+\ Inputs
+^Lever = 1
+
+\ Outputs
+^Pellet     = 3
+^Stimulus   = 4
+^HouseLight = 7
+
+
+Var_Alias Fixed Ratio = X  \ Default = 5
+
+
+\ List Data Variables Here
+\  A = Response Counter
+\  B = Reward Counter
+
+\  C() = IRT Array and Event Pen Code for Soft Cum. Recorder
+\        or other Analysis
+
+\  D = Free Pellet Counter
+
+
+\ List Working Variables Here
+\  I = Subscript for IRT Array C
+\  T = Used to Increment Counts at 0.1 Second Intervals for IRT's.
+\  X = Fixed Variable Ratio - set to a Default Value of 5 in S.S.1, S1
+
+
+\  Define Array sizes here.  The maximum total space available
+\  for all arrays is a single procedure is 1,000,000.  The code
+\  value -987.987 is used to seal or terminate the array at
+\  the last valid element.
+
+DIM C = 10000
+
+
+\ Z-Pulses Used in this Program
+\  Z1 = Signal for Pellet Timer
+
+
+\ K-Pulses Used in this Program
+\  K1 = Signal for Free Pellet
+
+
+DISKVARS   = A, B, C, D
+DISKFORMAT = 8.3
+
+
+\*********************************************
+\                FR5 SCHEDULE
+\  S1 - Set Default Values
+\         Fixed Ratio   (5)
+\*********************************************
+S.S.1,
+S1,
+  0.01": SET X = 5 ---> S2
+
+S2,
+  #START: ON ^HouseLight, ^Stimulus ---> S3
+  1": SHOW 1,FR =,X ---> SX
+
+S3,
+  X#R^Lever: ADD B; Z1 ---> SX
+
+
+\*********************************************
+\              RESPONSE COUNTER
+\*********************************************
+S.S.2,
+S1,
+  #START: ---> S2
+
+S2,
+  #R^Lever: ADD A ---> SX
+
+
+\**************************************************
+\               PELLET CONTROL TIMER
+\ (Includes K1-pulse for delivering a free pellet)
+\**************************************************
+S.S.3,
+S1,
+  #K1: ON ^Pellet; ADD D ---> S2
+  #Z1: ON ^Pellet        ---> S2
+
+S2,
+  0.05": OFF ^Pellet ---> S1
+
+
+\***********************************************
+\  The following State Sets are added to
+\  collect IRT and Reinforcement Time Codes
+\  that can be read by the SoftCR Cumulative
+\  Recorder program.  The IRT's can also be
+\  converted to real time values in any spread-
+\  sheet by stripping the code value to the
+\  right of the decimal point (use an int
+\  function) and dividing by 10.
+\***********************************************
+S.S.5,  \ Increment time "T" with resolution 0.1 seconds
+S1,
+  #START: ---> S2
+
+S2,
+  0.1": ADD T ---> SX
+
+
+\*************************************************
+\ ADD A STEP ELEMENT TO ARRAY C FOR EACH RESPONSE
+\*************************************************
+S.S.6,  \ Set "Step" code for each Response.
+        \ This code is for Relative or Incremental
+        \ values.  If Absolute or Cumulative values are
+        \ desired, delete the code ", T = 0" in S2.
+S1,
+  #START: SET C(I) = -987.987 ---> S2
+
+S2,
+  #R^Lever: SET C(I) = T + 0.10, T = 0; ADD I;
+            IF I >= 10000 [@TrueArrayFull, @FalseContinue]
+               @ArrayFull: ---> S1
+               @Cont: SET C(I) = -987.987 ---> SX
+
+
+\*************************************************
+\   ADD A PIP ELEMENT TO ARRAY C FOR EACH REWARD
+\*************************************************
+S.S.7,  \ Set "Pip" code for Reinforcement.
+        \ This code is for Relative or Incremental
+        \ values.  If Absolute or Cumulative values are
+        \ desired, delete the code ", T = 0" in S2.
+        \
+        \ Note: Free Pellets are not coded.
+S1,
+  #START: ---> S2
+
+S2,
+  #Z1: SET C(I) = T + 0.20, T = 0; ADD I;
+       IF I >= 10000 [@TrueArrayFull, @FalseContinue]
+          @ArrayFull: ---> S1
+          @Cont: SET C(I) = -987.987 ---> SX
+
+
+\*********************************************
+\               UPDATE DISPLAY
+\*********************************************
+S.S.8,
+S1,
+  #START: SHOW 1,FR =,X, 2,Responses,A, 3,Rewards,B, 4,Free Pellets,D ---> S2
+
+S2,
+  1": SHOW 1,FR =,X, 2,Responses,A, 3,Rewards,B, 4,Free Pellets,D ---> S2

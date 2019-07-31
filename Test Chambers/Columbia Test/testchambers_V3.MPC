@@ -1,0 +1,86 @@
+                \  Inputs ****************************
+^headIN = 3       \  IR head entry detector
+^headOUT = 4      \ IR head exit detector
+^LLever2 = 1       \  left lever press
+^RLever2 = 2       \  right lever press
+ 
+
+                  \  Outputs ****************************
+^leftlever = 1
+^rightlever = 2
+^fan = 12         \ Fans for Box ventilation  
+^dipper = 3        \ On Liquid Dipper
+^feederlight = 8   \ Light in the Head Entry Hole; Signal being used in this exp.
+^house = 7         \houselight
+
+^RedLeft = 4      \stimulus lights above Left Lever
+^YellowLeft = 5
+^GreenLeft = 6
+
+^RedRight = 9     \stimulus lights abouve Right Lever
+^YellowRight = 10
+^GreenRight = 11
+
+
+            \CONSTANTS***********************
+^DipDuration = 5    \dipper up duration (sec)
+
+	
+S.S.2,	\INITIALIZE 
+      
+s1,
+  
+           #start:~initANL926;~;~SetRack (MG, 2);~;
+         ~SetAmp (MG,BOX, 90);~;
+         ~SetRF (MG,BOX, 10);~;~SetFreq (MG,BOX, 2500);~;
+         ON^fan; ON^House; --->s3
+
+         
+s3,     
+         1":ON^RedLeft; ON^YellowLeft; ON^GreenLeft;
+         ON^leftlever;--->s4
+
+s4,
+         #R^LLever2: ON^dipper;ON^feederlight;~ondur(MG,BOX,200);~;--->s5
+
+s5,
+         2":OFF^dipper;OFF^RedLeft; OFF^YellowLeft; OFF^GreenLeft;
+         OFF^leftlever;OFF^feederlight;--->s7
+
+
+s7,
+         #R^headIN:ON^RedRight; ON^YellowRight; ON^GreenRight;
+         ON^rightlever;--->s8
+
+s8,
+         #R^RLever2: ON^dipper;ON^feederlight;--->s9
+
+s9,
+         2":OFF^dipper; OFF^rightlever; OFF^RedRight; OFF^GreenRight;
+          OFF^fan; OFF^feederlight; OFF^house;--->s10
+
+s10,
+         2":--->stopkill
+
+         
+
+S.S.3
+s1,
+	#R^LeftLever:	add x; show 2, LeftLev, x --->sx
+	#R^RightLever:  add y; show 3, RightLev, y --->sx
+
+
+
+
+
+
+
+
+
+
+
+
+         
+
+
+

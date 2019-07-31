@@ -1,0 +1,273 @@
+\                        C O M M E N T S
+\
+\ Revised: 4/5/19 by Stephanie Desrochers
+\ Conditioned inhibition experimental training to A and B rewarded, AX no reward
+\ 
+\ Session ends after all trials are done
+\
+\  Includes headin and headout event codes
+\ ***PROGRAM REQUIRES INPUT 3 (HEAD ENTRY) BE SET TO CONTINUOUS MODE*****
+
+\only save W, P variable to data file*******
+DISKFORMAT = 13.1
+DISKVARS = W    \"DISKVARS" only prints selected variables to datafile
+
+                  \  Inputs ****************************
+^headIN = 3       \  IR head entry detector
+^LLever2 = 1       \  left lever press
+^RLever2 = 2       \  right lever press
+
+
+                  \  Outputs ****************************
+^leftlever = 1
+^rightlever = 2
+^dipper = 3        \ On Liquid Dipper
+^house = 7         \houselight
+^dipLight = 9     \Blue LED dipper light
+
+    \CONSTANTS***********************
+^DipDuration = 5   \dipper up duration (sec)
+
+\  VARIABLES USED IN THIS PROGRAM
+\   a 
+\   b 
+\   c = session clock (displayed in Column 1)
+\   d = poke latency timer (reset with every trial)
+\   e 
+\   f= trial type, selected from list m
+\   g= count head entry
+\   h = ARRAY FOR HEAD ENTRY
+\   i = list array of ITI durations
+\   j = Number of dippers
+\   k= trial counter
+\   l
+\   m = list of trial types
+\   n
+\   o
+\   p = counter for w array
+\   q
+\   r
+\   s
+\   t
+\   u
+\   v
+\  (w) = time and event code for matlab
+\   x = ITI dur, selected from list i
+\   y
+\   z (reserved)
+
+
+\  SHOW POSITIONS
+\  1 = Session Timer
+\  2 = Dipper Timer
+\  3 = dipper counter
+\  4 = trials
+\  5 = head entries
+\  6 =
+
+
+\======================================================
+\ MATLAB standardized codes
+
+^Feed1 = 0021
+
+^DipOn = 0025
+^DipOff = 0026
+
+^DipLightOn = 1125
+^DipLightOff = 1126
+
+^StartTrial = 0111
+^EndTrial = 0112
+
+^StartSession = 0113
+^EndSession = 0114
+
+^HouseLightOff = 0115
+^HouseLightOn = 0116
+
+^ToneOn1 = 0061
+
+^PokeOff1 = 1001
+^PokeOn1 = 1011
+
+^ExictorBTrialStart = 1501
+^ExictorBTrialEnd = 1502
+^ExictorATrialStart = 1503
+^ExictorATrialEnd = 1504
+^AInhibitorTrialStart = 1505
+^AInhibitorTrialEnd = 1506
+^InhibitorTrialStart = 1507
+^InhibitorTrialEnd = 1508
+^BInhibitorTrialStart = 1509
+^BInhibitorTrialEnd = 1510
+
+
+\================================================================
+
+
+\Dimensionalize Event and Time code array
+dim a=100
+dim w=10000
+dim c=3
+
+\ITI duration list (in hundredths of seconds) = 6000 + variable 6000
+list i = 9800,10600,10900,11500,11600,11800,12300,12800,14100,14600
+\ List of trial type - 0=Noise+  1= click+ 2= Click/Light - or Light-
+list m = 0,0,0,0,0,0,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
+
+\===============================
+\   Z-PULSES USED IN THIS PROGRAM
+\ z1 = dipper up (initiate timer D)
+\ z2 = dipper down
+\z3 = end of stimulus reward 
+\z4 = tells to go to end
+\z5 = noise trial
+\z6 = click trial
+\z7 = inhibitor trial
+\z8,9,10=head checker
+\===============================
+
+s.s.1,  \MATLAB TIMER "T"
+s1,
+        0":     SET p = -1; set b = -1; set r = 0 --->s2
+s2,
+        .02":     SET T = T + 100000 --->sx  \Keeps time in 50th of a second
+
+S.S.2,    \INITIALIZE
+s1,
+        #start:    ~initANL926;~;~SetRack (MG, 2);~;
+                   ~SetAmp (MG,BOX, 75);~;~SetRF (MG,BOX, 10);~;~SetFreq (MG,BOX, 0);~;
+	           ~SetClickFreq(MG,BOX, 10);~;
+
+                   add p; set w(p)= ^StartSession + T---> s2
+s2,
+    #z4:     --->s3
+s3,
+    10":    add p; set w(p)= ^EndSession + T;
+                add p; set w(p)=-987.987;
+                add b; set a(b)= -99;
+                add b; set a(b) = -987.987--->stopabortflush
+
+
+
+
+s.s.3 \ pick duration and trial
+s1,
+	#start: SHOW 4,Trials,0; set k=0;---> s2
+s2,
+	0": randd x = i; randd f = m;add k; SHOW 4, Trials, k;---> s3	
+
+s3,
+	x#t: if f= 0 [@noisetrial, @notrial]
+		@noisetrial: z5 ---> s4
+		@notrial: if f = 1 [@clicktrial, @inhibitortrial]
+			@clicktrial: z6---> s4
+			@inhibitortrial:  z7 ---> s4
+s4,
+	20": if k<30[@continue,@end]
+		@continue:---> s2
+		@end: z4--->sx
+
+
+
+s.s.4, \ Noise+ (B)
+
+s1,
+	#start ---> s2
+s2,
+	#z5: ~ondur(MG,BOX,20000);~;add p; set w(p)=T+^ExictorBTrialStart;--->s3
+
+s3,
+	20": z3; add p; set w(p)=T+^ExictorBTrialEnd;--->s2
+
+
+s.s.5, \ Click+ (A)
+
+s1,
+	#start ---> s2
+s2,
+	#z6: ~ClickOn(MG,BOX);~; add p; set w(p)=T+^ExictorATrialStart;--->s3
+
+s3,
+	20": z3; ~ClickOff(MG,BOX);~; add p; set w(p)=T+^ExictorATrialEnd;--->s2
+
+
+s.s.6, \ Click/Light- (light is X, inhibitor, so this is AX- trial)
+s1,
+	#start ---> s2
+s2,
+	#z7: ~ClickOn(MG,BOX);~; ON^house; add p; set w(p)=T+^InhibitorTrialStart;--->s3
+s3,
+	20": ~ClickOff(MG,BOX);~; OFF^house; add p; set w(p)=T+^InhibitorTrialEnd;--->s2
+
+	
+s.s.7,  \Reinforcer controller - Dippers
+s1,
+        #start:    add p; set w(p)= ^StartSession+T;--->s2
+
+s2,
+           #z3:  add j;show 3, Dippers,j;
+           ON^dipper; z1; add p; set w(p)=T+^DipON--->s3
+
+s3,
+         5":     z2; OFF^dipper; add p; set w(p)=T+^DipOff;--->s2
+
+
+
+S.S.8,  \Head Entry (Input 3) COUNTER
+S1,
+    #START:SHOW 5,HeadIn,0; set g=0; --->S2
+S2,
+    #R^headIN:  add p; set w(p)=^PokeOn1+T;add g; SHOW 5,HeadIn,g; z10 ---> s3
+
+s3,
+    #z8 ---> s2
+
+
+
+s.s.9,  \Head still in checker part 1
+s1,
+    #z10 --->s2   \Z10 gets called when head first enters
+
+s2,
+    0": z9 ---> s3
+
+s3,
+    0.05": if y>0 [@headSTILLin, @headExit]
+        @headSTILLin: set y=0; ---> s2
+        @headEXIT: z8; add p; set w(p)=^PokeOff1+T;---> s1
+
+
+
+s.s.10, \Head still in checker part 2
+s1,
+    #z9: --->s2
+
+s2,
+    #R^headIN: set y=1; --->s3
+s3, 
+   0": --->s1
+
+
+
+s.s.11,  \Dipper Up Timer (D variable)
+s1,
+    #z1:     set d=0--->s2
+s2,
+    0.1":    set d=d+0.1;show 2,DipUpTime,d--->sx
+    #z2:    --->s1
+
+
+
+S.S.12, \Session Duration Clock
+s1,
+    #start:--->s2
+s2,
+    1":    set c(0)=c(0)+.01; if c(0)>.59 [@AddMin, @NoAdd]
+            @AddMin: add c(1); set c(0)=0; set c(2)=c(0)+c(1); show 1, Session, c(2) --->s2
+            @NoAdd: set c(2)=c(0)+c(1); show 1, Session, c(2)--->s2
+
+
+
+

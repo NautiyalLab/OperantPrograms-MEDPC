@@ -1,0 +1,285 @@
+\                        C O M M E N T S
+\
+\ Right Lever go no-go w/60 Trials and a mean 40 sec. ITI
+\ 30 trials are Go, 30 No Go
+\ Go trial start signalled by lever insertion to chamber
+\ NoGo trial signalled by house light off and stim lights on over lever
+\
+\ Kate Nautiyal 1-5-14; modified 4/17/14 by KTaylor
+\ modified 4/25/14 to include pre-run box check by KTaylor
+\ modified 4/29/14 to add NoGo trials by KTaylor
+
+
+DISKFORMAT = 13
+DISKVARS = W,E    
+DISKCOLUMNS = 1
+
+
+\  Inputs ****************************
+^LLever = 2       \  left lever press
+^RLever = 1       \  right lever press
+^HeadIn = 4      \  IR head entry detector
+^HeadOut = 3      \ IR head exit detector
+
+
+
+                  \  Outputs ****************************
+^LeftLever = 8
+^RightLever = 7
+^Fan = 12          \ Fans for Box ventilation  
+^Dipper = 6        \ On Liquid Dipper
+^House = 1         \houselight
+^LightLeft=5        \stimulus lights above Left Lever
+^LightRight=4   \stimulus lights abouve Right Lever
+
+
+
+
+\  VARIABLES USED IN THIS PROGRAM
+\  (a) = holder for lever press on
+\  (b) = holder for lever press off
+\   c = holder for trial type
+\   d = holder for ITI duration
+\   e = Box test verification
+\   f =
+\   g = 
+\   h = 
+\  (i) = list array of ITI durations
+\   j = trial counter
+\   k = session timer for display
+\   l = list for trial type
+\   m = 
+\   n = left lever responses
+\   o = right lever responses
+\   p = 
+\   q =
+\   r = right lever counter
+\   s = left lever counter
+\   t = time counter for time-stamped event codes
+\   u = 
+\   v = 
+\  (w) = data array of time-stamped event codes
+\   x = 
+\   y =
+\   z =
+
+
+
+\  \  SHOW POSITIONS
+\  1 = session timer
+\  2 = trial counter
+\  3 = press counter
+\  4 = reinforcement counter
+\  5 = HE indicator (0=out, 1=in)
+
+
+\======================================================
+\ MATLAB standardized codes
+\ *** = used in this program
+
+^DipOn = 0025   
+^DipOff = 0026   
+^LLeverOn = 0027
+^RLeverOn= 0028 
+^LLeverOff = 0029 
+^RLeverOff = 0030 
+
+^LightOff1=0031 
+^LightOn1=0041 
+
+^StartTrial1 = 0109
+^EndTrial1 = 0110
+
+^StartTrial2 = 0111
+^EndTrial2 = 0112
+
+^StartSession = 0113  
+^EndSession = 0114  
+
+^HouseLightOff = 0115
+^HouseLightOn = 0116
+^OnFan = 0117
+^OffFan = 0118
+^StartIti = 0121
+^EndIti = 0122
+
+^HeadExit = 1001
+^HeadEntry = 1011
+
+^LLeverPressOn = 1015
+^RLeverPressOn = 1016
+^LLeverPressOff = 1017
+^RLeverPressOff = 1018
+
+^FeederLightOn = 0101  
+^FeederLightOff = 0102  
+
+\================================================================
+
+dim a=2
+dim b=2
+dim k=3
+dim w=10000
+
+
+\ITI duration list (in hundredths of seconds)
+list i = 570,630,700,770,850,920,990,1070,1140,1220,1300,1380,1470,1550,
+     1640,1730,1820,1910,2010,2110,2210,2310,2410,2520,2630,2750,2860,
+     2990,3110,3240,3370,3510,3650,3800,3960,4120,4280,4460,4640,4830,
+     5030,5240,5460,5700,5950,6210,6500,6810,7140,7500,7900,8350,8850,
+     9420,10090,10890,11890,13220,15220,19220
+
+\ Trial Type list 1=Go Trial, 2=No Go Trial
+list l = 1,1,1,1,1,2,2,2,2,2
+
+\===============================
+\ Z-PULSES USED IN THIS PROGRAM
+\ z1 = end program
+\ z2 = initiate go trial
+\ z3 = initiate no go trial
+\ z4 = right press indicator
+\ z5 = left press indicator
+\ z6 = dipper delivery
+\ z7 = start new trial
+\ z10 = start after box test
+\===============================
+
+
+S.S.1,
+s1,
+	1": On^house; ON^RightLever;
+		on^LightRight; --->s2
+s2,
+	#R^RLever: Off^RightLever; On^LeftLever;
+		off^LightRight; 
+		on^LightLeft;--->s3
+s3,
+	#R^LLever: off^LeftLever; On^dipper;
+		off^LightLeft; --->s4
+s4,
+	#R^headIN: off^dipper; Off^House; set e=9999999999; --->s5
+s5,
+	#start: z10 --->sx
+
+
+S.S.2,    \INITIALIZE
+s1,
+	#z10:	~initANL926;~;~SetRack (MG, 2);~;~SetAmp (MG,BOX, 90);~;
+		~SetRF (MG,BOX, 10);~;~SetFreq (MG,BOX, 2500);~;
+		add p; set w(p)= ^StartSession + T;
+		ON^house; add p; set w(p)=^HouseLightOn+T--->s2
+s2,
+	#z1:    --->s3
+	60':    --->s3
+s3,
+	10":    OFF^house;add p; set w(p) = ^HouseLightOff + T;
+		add p; set w(p)= ^EndSession + T;
+		add p; set w(p)=-987.987;--->stopabortflush
+
+S.S.3, \Trial COntroller
+s1,
+	#z10:   randd d=i;add p; set w(p)= ^StartITI+T; --->s2
+s2,
+        d#T:    randd c=l; add j; if c=1[@go, @NoGo]
+			@go: z2--->s3
+			@nogo: z3--->=s3
+s3,
+	#z7:	if j>59 [@end, @more]
+			@end: z1 --->s1
+			@more: randd d=i;add p;set w(p)=^StartITI+T; --->s2
+
+S.S.4   \Go trial
+s1,
+	#z2:	add p; set w(p) = ^StartTrial1+T;
+		ON^RightLever;ON^LightRight;add p; set w(p) = ^RLeverOn+T;
+		SHOW 2, GO_Trial,j; --->s2
+s2,
+        #z5:     ON^dipper;add p;set w(p)=^DipOn+T; --->s3
+	5":      Off^Rightlever; Off^LightRight;add p;set w(p)=^RLeverOff+T;z7 --->s1
+s3,
+	0.5":	Off^Rightlever; Off^LightRight; add p;set w(p)=^RLeverOff+T;
+		~ondur(MG,BOX,200);~;--->s4
+s4,
+	4.5":   OFF^dipper;add p; set w(p) = ^DipOff + T;
+		add u;show 4,Dips,u; z7 --->s1
+
+
+s.s.5,  \NoGo Trial
+s1,
+	#z3:    add p; set w(p) = ^StartTrial2+T; 
+		Off^house;add p; set w(p) = ^HouseLightOff+T;
+		on^LightRight;
+		add p; set w(p)=^LightOn1+T;
+		ON^Rightlever;add p; set w(p) = ^RLeverOn+T;
+		SHOW 2, NoGo_Trial,j; --->s2
+s2,
+        5":     Off^Rightlever; add p;set w(p)=^RLeverOff+T;
+		ON^dipper;add p;set w(p)=^DipOn+T; --->s3
+	#z5:    Off^RightLever; add p;set w(p)=^RLeverOff+T; 
+		off^LightRight;
+		add p; set w(p)=^LightOff1+T; 
+		ON^house; add p; set w(p)=^HouseLightOn+T; z7 --->s1
+s3,
+	0.5":	~ondur(MG,BOX,200);~;
+		add u;show 4,Dips,u;--->s4
+s4,
+	4.5":   OFF^dipper;add p; set w(p) = ^DipOff + T; 
+		off^LightRight;
+		add p; set w(p)=^LightOff1+T;
+		ON^house; add p; set w(p)=^HouseLightOn+T; z7 --->s1
+
+S.S.6,  \Head Entry Detector  
+s1,
+	#z10:--->s2
+S2,   
+	#R^headIN:  add p; set w(p)=^HeadEntry+T; --->s2
+	#R^headOUT: add p; set w(p)=^HeadExit+T; --->s2 
+
+S.S.7,  \Bar Press Detector - Left Lever       
+s1,                                            
+	#z10: --->s2
+s2,
+       .05": if a(0) > 0 [@press, @nopress]
+            	@press: if b(0) = 0 [@leveron, @noleveron]
+                   @leveron: add p; set w(p)= ^LLeverPressOn+T;
+                 		add s; show 3, LPress, s;
+                        	set b(0) = 1; set a(0) = 0--->s2
+                    @noleveron: set b(0) = 1; set a(0) = 0--->s2
+		@nopress: if b(0) = 1 [@stop, @nostop]     
+                	@stop:  z4; add p;set w(p)= ^LLeverPressOff+T; 
+                      		set b(0) = a(0); set a(0) = 0; --->s2
+                	@nostop:set b(0) = a(0); set a(0) = 0; --->s2               
+        #R^LLever: set a(0)=a(0)+1; --->sx        
+                                                 
+S.S.8,  \Bar Press Detector - Right Lever         
+s1,                        
+    #z10: --->s2          
+s2,
+       .05": if a(1) > 0 [@press, @nopress]     
+            @press: if b(1) = 0 [@leveron, @noleveron]
+                    @leveron: add p;set w(p)= ^RLeverPressOn+T;
+                  		add r; show 3, RPress, r;  
+                           	set b(1) = 1; set a(1) = 0;--->s2
+                    @noleveron: set b(1) = 1; set a(1) = 0--->s2
+            @nopress: if b(1) = 1 [@stop, @nostop]
+                    @stop:  z5; add p;set w(p)= ^RLeverPressOff+T;                    
+                          	set b(1) = a(1); set a(1) = 0; --->s2     
+                    @nostop:set b(1) = a(1); set a(1) = 0; --->s2 
+        #R^RLever: set a(1)=a(1)+1; --->sx 
+
+S.S.9, \Session Duration Clock
+s1,
+	#z10:--->s2
+s2,
+	1":    set k(0)=k(0)+.01; if k(0)>.59 [@AddMin, @NoAdd]
+            	@AddMin: add k(1); set k(0)=0; set k(2)=k(0)+k(1); show 1, Session, k(2) --->s2
+            	@NoAdd: set k(2)=k(0)+k(1); show 1, Session, k(2)--->s2
+
+
+s.s.10,  \TIMER for Time Stamped Event Data Array
+s1,
+        0": SET p=-1; --->s2
+s2,
+        .01": SET T = T + 100000 --->sx 
+
+
