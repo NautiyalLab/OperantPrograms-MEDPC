@@ -13,7 +13,7 @@ DISKFORMAT = 13.1
 DISKVARS = W    \"DISKVARS" only prints selected variables to datafile
 
                   \  Inputs ****************************
-^headIN = 3       \  IR head entry detector
+^headIN = 3        \  IR head entry detector
 ^LLever2 = 1       \  left lever press
 ^RLever2 = 2       \  right lever press
 
@@ -23,7 +23,7 @@ DISKVARS = W    \"DISKVARS" only prints selected variables to datafile
 ^rightlever = 2
 ^dipper = 3        \ On Liquid Dipper
 ^house = 7         \houselight
-^dipLight = 9     \Blue LED dipper light
+^dipLight = 9      \Blue LED dipper light
 
     \CONSTANTS***********************
 ^DipDuration = 5   \dipper up duration (sec)
@@ -32,50 +32,45 @@ DISKVARS = W    \"DISKVARS" only prints selected variables to datafile
 \   a 
 \   b 
 \   c = session clock (displayed in Column 1)
-\   d = poke latency timer (reset with every trial)
+\   d = dipper up timer (reset with every trial, displayed in Column 2)
 \   e 
-\   f= trial type, selected from list m
-\   g= count head entry
-\   h = ARRAY FOR HEAD ENTRY
+\   f = conditioned inhibition trial type, selected from list m
+\   g = count head entry (displayed in Column 5)
+\   h 
 \   i = list array of ITI durations
-\   j = Number of dippers
-\   k= trial counter
+\   j = counter for dippers (displayed in Column 3)
+\   k = total trial counter
 \   l
-\   m = list of trial types
+\   m = list of conditioned inhibition trial types
 \   n
 \   o
 \   p = counter for w array
 \   q
 \   r
 \   s
-\   t
+\   t = timer
 \   u
 \   v
-\  (w) = time and event code for matlab
-\   x = ITI dur, selected from list i
-\   y
+\  (w) = time and event code
+\   x = ITI duration, selected from list i
+\   y = checker for head entry
 \   z (reserved)
 
 
 \  SHOW POSITIONS
 \  1 = Session Timer
 \  2 = Dipper Timer
-\  3 = dipper counter
-\  4 = trials
-\  5 = head entries
+\  3 = Dipper Counter
+\  4 = Trials Counter
+\  5 = Head Entries
 \  6 =
 
 
 \======================================================
 \ MATLAB standardized codes
 
-^Feed1 = 0021
-
 ^DipOn = 0025
 ^DipOff = 0026
-
-^DipLightOn = 1125
-^DipLightOff = 1126
 
 ^StartTrial = 0111
 ^EndTrial = 0112
@@ -85,8 +80,6 @@ DISKVARS = W    \"DISKVARS" only prints selected variables to datafile
 
 ^HouseLightOff = 0115
 ^HouseLightOn = 0116
-
-^ToneOn1 = 0061
 
 ^PokeOff1 = 1001
 ^PokeOn1 = 1011
@@ -129,7 +122,7 @@ list m = 0,0,0,0,0,0,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
 
 s.s.1,  \MATLAB TIMER "T"
 s1,
-        0":     SET p = -1; set r = 0 --->s2
+        0":     SET p = -1; --->s2
 s2,
         .02":     SET T = T + 100000 --->sx  \Keeps time in 50th of a second
 
