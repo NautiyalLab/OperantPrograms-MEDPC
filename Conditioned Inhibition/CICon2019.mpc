@@ -2,7 +2,7 @@
 \
 \ Revised: 4/5/19 by Stephanie Desrochers
 \ Revised: 8/1/19 by Stephanie Desrochers
-\ Conditioned inhibition control training to A and B rewarded, X no reward
+\ Conditioned inhibition control training to A(Click) and B(Noise) rewarded, X(House Light) no reward
 \ 
 \ Session ends after all trials are done (30 trials)
 \
@@ -24,8 +24,8 @@ DISKVARS = W    \"DISKVARS" only prints selected variables to datafile
 ^leftlever = 1
 ^rightlever = 2
 ^dipper = 3        \ On Liquid Dipper
-^house = 7         \houselight
-^dipLight = 9      \Blue LED dipper light
+^house = 7         \ houselight
+^dipLight = 9      \ Blue LED dipper light
 
     \CONSTANTS***********************
 ^DipDuration = 5   \dipper up duration (sec)
@@ -115,11 +115,11 @@ list m = 0,0,0,0,0,0,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
 \ z1 = dipper up (initiate timer D)
 \ z2 = dipper down
 \ z3 = end of stimulus reward 
-\ z4 = tells to go to end
+\ z4 = go to end
 \ z5 = noise trial
 \ z6 = click trial
 \ z7 = inhibitor trial
-\ z8,9,10=head checker
+\ z8,9,10 = head checker
 \===============================
 
 s.s.1,  \MATLAB TIMER "T"
@@ -151,7 +151,7 @@ s2,
 	0": randd x = i; randd f = m;add k; SHOW 4, Trials, k;---> s3	
 
 s3,
-	x#t: if f= 0 [@noisetrial, @notrial]
+	x#t: if f=0 [@noisetrial, @notrial]
 		@noisetrial: z5 ---> s4
 		@notrial: if f = 1 [@clicktrial, @inhibitortrial]
 			@clicktrial: z6---> s4
