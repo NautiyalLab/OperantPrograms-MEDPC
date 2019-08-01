@@ -153,6 +153,16 @@ DISKCOLUMNS = 1
 ^PokeOffCtrl = 1305
 ^PokeOnCtrl = 1306
 
+^GoTrialBegSmallReward = 1540
+^GoTrialBegLargeReward = 1541
+^GoTrialSuccessSmallReward = 1542
+^GoTrialSuccessLargeReward = 1543
+^NoGoTrialBegSmallReward = 1544
+^NoGoTrialBegLargeReward = 1545
+^NoGoTrialSuccessSmallReward = 1546
+^NoGoTrialSuccessLargeReward = 1547
+
+
 ^FeederLightOn = 0101  \***
 ^FeederLightOff = 0102  \***
 
@@ -223,11 +233,11 @@ s3,
 
 s4,
      0":  ON^leftlever;
-                add v; SHOW 3, Trial# ,v; add p; set w(p) = ^LLeverOn + T;z3--->s6
+                add v; SHOW 3, Trial# ,v; add p; set w(p) = ^LLeverOn + T; add p; set w(p) = ^GoTrialBegSmallReward + T; z3--->s6
 
 s5,
      0":  ON^rightlever;
-                add v; SHOW 3, Trial# ,v; add p; set w(p) = ^RLeverOn + T;z4--->s6
+                add v; SHOW 3, Trial# ,v; add p; set w(p) = ^RLeverOn + T; add p; set w(p) = ^GoTrialBegLargeReward + T; z4--->s6
 
 s6,
     #z2: randd d = i; SET y=0; ---> s7
@@ -293,7 +303,7 @@ s2,
 
 s3,
       #R^LLever2: ON^dipper;SET y=1;OFF^leftlever; add p; set w(p) = ^LLeverOff + T;
-                       add p; set w(p) = ^DipOn + T; --->s4
+                       add p; set w(p) = ^DipOn + T; add p; set w(p) = ^GoTrialSuccessSmallReward + T; --->s4
 
 s4,
         5":OFF^dipper;add p; set w(p) = ^DipOff + T;
@@ -314,7 +324,7 @@ s2,
 
 s3,
     #R^RLever2: ON^dipper;SET y=1;OFF^rightlever; add p; set w(p) = ^RLeverOff + T;
-                       add p; set w(p) = ^DipOn + T; --->s4
+                       add p; set w(p) = ^DipOn + T; add p; set w(p) = ^GoTrialSuccessLargeReward + T;--->s4
 
 s4,
     3": OFF^dipper ---> s5
