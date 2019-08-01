@@ -107,7 +107,6 @@ DISKVARS = W    \"DISKVARS" only prints selected variables to datafile
 
 
 \Dimensionalize Event and Time code array
-dim a=100
 dim w=10000
 dim c=3
 
@@ -120,17 +119,17 @@ list m = 0,0,0,0,0,0,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
 \   Z-PULSES USED IN THIS PROGRAM
 \ z1 = dipper up (initiate timer D)
 \ z2 = dipper down
-\z3 = end of stimulus reward 
-\z4 = tells to go to end
-\z5 = noise trial
-\z6 = click trial
-\z7 = inhibitor trial
-\z8,9,10=head checker
+\ z3 = end of stimulus reward 
+\ z4 = tells to go to end
+\ z5 = noise trial
+\ z6 = click trial
+\ z7 = inhibitor trial
+\ z8,9,10=head checker
 \===============================
 
 s.s.1,  \MATLAB TIMER "T"
 s1,
-        0":     SET p = -1; set b = -1; set r = 0 --->s2
+        0":     SET p = -1; set r = 0 --->s2
 s2,
         .02":     SET T = T + 100000 --->sx  \Keeps time in 50th of a second
 
@@ -142,12 +141,10 @@ s1,
 
                    add p; set w(p)= ^StartSession + T---> s2
 s2,
-    #z4:     --->s3
+    #z4:    --->s3
 s3,
     10":    add p; set w(p)= ^EndSession + T;
-                add p; set w(p)=-987.987;
-                add b; set a(b)= -99;
-                add b; set a(b) = -987.987--->stopabortflush
+                add p; set w(p)=-987.987;--->stopabortflush
 
 
 
