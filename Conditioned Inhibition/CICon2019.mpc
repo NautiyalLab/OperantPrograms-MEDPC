@@ -4,9 +4,10 @@
 \ Revised: 8/1/19 by Stephanie Desrochers
 \ Conditioned inhibition control training to A and B rewarded, X no reward
 \ 
-\ Session ends after all trials are done
+\ Session ends after all trials are done (30 trials)
 \
-\  Includes headin and headout event codes
+\ Includes headin and headout event codes
+\ Requires speakers
 \ ***PROGRAM REQUIRES INPUT 3 (HEAD ENTRY) BE SET TO CONTINUOUS MODE*****
 
 \only save W, P variable to data file*******
@@ -49,7 +50,7 @@ DISKVARS = W    \"DISKVARS" only prints selected variables to datafile
 \   q
 \   r
 \   s
-\   t = timer
+\   t = current time
 \   u
 \   v
 \  (w) = time and event code
